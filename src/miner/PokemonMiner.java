@@ -416,7 +416,7 @@ public class PokemonMiner extends Miner {
 	}
 
 	/**
-	 * Gets data for Egg moves learned by new Pokémon.
+	 * Gets data for Egg moves learned by old Pokémon.
 	 * @return The database query for inserting new Egg moves into the database.
 	 */
 	public String getEggMoveDataOld() {
