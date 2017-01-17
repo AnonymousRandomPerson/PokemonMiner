@@ -120,9 +120,10 @@ public class StringUtil {
 		}
 		startIndex += section.length() + 1;
 		int endIndex = currentRaw.indexOf("|", startIndex);
+		int newLineIndex = currentRaw.indexOf("\n", startIndex);
 		int indexBreak = currentRaw.indexOf("}}", startIndex);
 		int startBrace = currentRaw.indexOf("{{", startIndex);
-		if (startBrace != -1 && startBrace < indexBreak) {
+		if (startBrace != -1 && startBrace < indexBreak && startBrace < newLineIndex) {
 			int newEndIndex = currentRaw.indexOf("|", indexBreak);
 			if (newEndIndex > -1) {
 				endIndex = newEndIndex;
@@ -140,6 +141,21 @@ public class StringUtil {
 			entry = entry.replaceFirst("= ", "");
 		}
 		return entry;
+	}
+	
+	/**
+	 * Gets an entry in a Pokémon table, with backup entries for nonexistence. 
+	 * @param section The section to get an entry from.
+	 * @return The entry in the Pokémon table, or null if the entry doesn't exist.
+	 */
+	public static String getTableEntryFallback(String... sections) {
+		for (String section : sections) {
+			String entry = getTableEntry(section);
+			if (entry != null) {
+				return entry;
+			}
+		}
+		return null;
 	}
 
 	/**

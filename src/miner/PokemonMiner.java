@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -425,7 +426,7 @@ public class PokemonMiner extends Miner {
 		List<String> pokemonList = APIConnection.getGenerationPokemon(new String[] { "I", "II", "III", "IV", "V" });
 
 		String[] gen6Moves = APIConnection.getCategoryMembers("Generation_VI_moves");
-		Set<String>	moveSet = new HashSet<>();
+		Set<String> moveSet = new HashSet<>();
 		for (String move : gen6Moves) {
 			moveSet.add(move.replace(" (move)", ""));
 		}
@@ -756,5 +757,182 @@ public class PokemonMiner extends Miner {
 		Integer moveID = database.getMoveIndex(move);
 		StringUtil.addCommaSeparated(builder, true, pokemonID, moveID);
 		builder.append(");\n");
+	}
+
+	/**
+	 * Gets Mega Evolution data from Bulbapedia.
+	 * @return The database query for the Mega Evolution data.
+	 */
+	public String getMegaData() {
+		Map<String, Integer> typeMap = database.getTypeMap();
+
+		Map<String, Integer> eggGroupMap = new HashMap<>();
+		database.loadMap(eggGroupMap, "EGGGROUPID", "NAME", "EGGGROUPS");
+
+		Map<String, Integer> abilityMap = new HashMap<>();
+		database.loadMap(abilityMap, "ABILITYID", "NAME", "ABILITIES");
+		abilityMap.put("ShellArmor", abilityMap.get("ShellArmour"));
+
+		StringBuilder baseQuery = new StringBuilder();
+		baseQuery.append("INSERT INTO PIXELMON (");
+		StringUtil.addCommaSeparated(baseQuery, false, "NATIONALPOKEDEXNUMBER", "PIXELMONFULLNAME", "PIXELMONNAME",
+				"PIXELMONTYPE1ID", "PIXELMONTYPE2ID", "ABILITY1ID", "ABILITY2ID", "ABILITYHIDDENID", "EGGGROUP1ID",
+				"EGGGROUP2ID", "EGGCYCLES", "POKEDEXHEIGHT", "POKEDEXWIDTH", "POKEDEXLENGTH", "POKEDEXWEIGHT",
+				"POKEDEXDESCRIPTION", "MALEPERCENT", "CATCHRATE", "SPAWNTIMEID", "MINGROUPSIZE", "MAXGROUPSIZE",
+				"BASEEXP", "EXPERIENCEGROUP", "BASEHP", "BASEATK", "BASEDEF", "BASESPATK", "BASESPDEF", "BASESPD",
+				"EVGAINHP", "EVGAINATK", "EVGAINDEF", "EVGAINSPATK", "EVGAINSPDEF", "EVGAINSPD", "MINSPAWNLEVEL",
+				"MAXSPAWNLEVEL", "MODELSCALE", "PERCENTTIMID", "PERCENTAGRESSIVE", "ISRIDEABLE", "CANFLY", "CANSWIM",
+				"DOESHOVER", "BASEFRIENDSHIP", "FORM");
+		baseQuery.append(") VALUES \n");
+
+		String[] megaArray = APIConnection.getCategoryMembers("Pokémon_with_Mega_Evolutions");
+		List<String> megaList = new ArrayList<>();
+		Collections.addAll(megaList, megaArray);
+		int origNumPokemon = megaArray.length;
+		megaList.add("Charizard (Pokémon)");
+		megaList.add("Mewtwo (Pokémon)");
+		int numMega = megaList.size();
+		megaList.add("Groudon (Pokémon)");
+		megaList.add("Kyogre (Pokémon)");
+		int numPokemon = megaList.size();
+
+		for (int i = 0; i < numPokemon; i++) {
+			boolean secondMega = i >= origNumPokemon && i < numMega;
+			boolean primal = i >= numMega;
+			String pokemonName = megaList.get(i);
+			Pokemon pokemon = new Pokemon(pokemonName);
+			pokemon.truncateName();
+			System.out.println(pokemon.name);
+
+			String totalRaw = APIConnection.getArticleSource(pokemonName);
+			StringUtil.currentRaw = totalRaw.substring(0, totalRaw.indexOf("Biology"));
+
+			pokemon.nationalPokedexNumber = StringUtil.getTableEntryInt("ndex");
+
+			pokemon.type1 = StringUtil.getTableEntryFallback(secondMega ? "form3type1" : "form2type1", "type1");
+			pokemon.type2 = StringUtil.getTableEntryFallback(secondMega ? "form3type2" : "form2type2", "type2");
+			pokemon.ability1 = StringUtil.removeSpaces(
+					StringUtil.getTableEntryFallback(secondMega ? "abilitym2" : "abilitym", "ability2-1", "ability1"));
+			pokemon.ability2 = null;
+			pokemon.abilityHidden = null;
+			pokemon.eggGroup1 = StringUtil.removeSpaces(StringUtil.getTableEntry("egggroup1"));
+			pokemon.eggGroup2 = StringUtil.removeSpaces(StringUtil.getTableEntry("egggroup2"));
+			pokemon.eggCycles = StringUtil.getTableEntryInt("eggcycles");
+			pokemon.height = StringUtil.getTableEntryFloat(secondMega ? "height-m3" : "height-m2");
+			pokemon.weight = StringUtil.getTableEntryFloat(secondMega ? "weight-kg3" : "weight-kg2");
+
+			int genderCode = StringUtil.getTableEntryInt("gendercode");
+			switch (genderCode) {
+			case 256:
+			case 255:
+				pokemon.genderRatio = -1;
+				break;
+			case 254:
+				pokemon.genderRatio = 0;
+				break;
+			case 223:
+				pokemon.genderRatio = 12;
+				break;
+			case 191:
+				pokemon.genderRatio = 25;
+				break;
+			case 127:
+				pokemon.genderRatio = 50;
+				break;
+			case 63:
+				pokemon.genderRatio = 75;
+				break;
+			case 31:
+				pokemon.genderRatio = 87;
+				break;
+			case 0:
+				pokemon.genderRatio = 100;
+				break;
+			}
+
+			pokemon.catchRate = StringUtil.getTableEntryInt("catchrate");
+			try {
+				pokemon.expYield = StringUtil.getTableEntryInt("expyield");
+			} catch (NumberFormatException e) {
+				String expYieldString = StringUtil.getTableEntry("expyield");
+				expYieldString = StringUtil.getSubstringBetween(expYieldString, "--", "in");
+				expYieldString = expYieldString.trim();
+				pokemon.expYield = Integer.parseInt(expYieldString);
+			}
+
+			int maxExp = StringUtil.getTableEntryInt("lv100exp");
+			switch (maxExp) {
+			case 600000:
+				pokemon.expGroup = "Erratic";
+				break;
+			case 800000:
+				pokemon.expGroup = "Fast";
+				break;
+			case 1000000:
+				pokemon.expGroup = "MediumFast";
+				break;
+			case 1059860:
+				pokemon.expGroup = "MediumSlow";
+				break;
+			case 1250000:
+				pokemon.expGroup = "Slow";
+				break;
+			case 1640000:
+				pokemon.expGroup = "Fluctuating";
+				break;
+			}
+
+			pokemon.evHP = StringUtil.getTableEntryInt("evhp");
+			pokemon.evAtk = StringUtil.getTableEntryInt("evat");
+			pokemon.evDef = StringUtil.getTableEntryInt("evde");
+			pokemon.evSpAtk = StringUtil.getTableEntryInt("evsa");
+			pokemon.evSpDef = StringUtil.getTableEntryInt("evsd");
+			pokemon.evSpd = StringUtil.getTableEntryInt("evsp");
+
+			StringUtil.currentRaw = StringUtil.getSubstringBetween(totalRaw, "==Base stats", "ness=");
+			if (secondMega) {
+				StringUtil.currentRaw = StringUtil.getSubstringBetween(StringUtil.currentRaw, "==Mega", "effective");
+				StringUtil.currentRaw = StringUtil.getSubstringBetween(StringUtil.currentRaw, "===Mega", "=Type ");
+			} else {
+				StringUtil.currentRaw = StringUtil.getSubstringBetween(StringUtil.currentRaw,
+						primal ? "==Primal" : "==Mega", "=Type effective");
+			}
+			pokemon.baseHP = StringUtil.getTableEntryInt("HP");
+			pokemon.baseAtk = StringUtil.getTableEntryInt("Attack");
+			pokemon.baseDef = StringUtil.getTableEntryInt("Defense");
+			pokemon.baseSpAtk = StringUtil.getTableEntryInt("SpAtk");
+			pokemon.baseSpDef = StringUtil.getTableEntryInt("SpDef");
+			pokemon.baseSpd = StringUtil.getTableEntryInt("Speed");
+
+			pokemon.baseFriendship = StringUtil.getTableEntryInt("Friendship");
+
+			baseQuery.append("(");
+
+			int form = secondMega ? 2 : 1;
+
+			ResultSet result = database.executeQuery(
+					"SELECT SPAWNTIMEID, PERCENTTIMID, PERCENTAGRESSIVE, ISRIDEABLE, CANFLY, CANSWIM, DOESHOVER FROM PIXELMON WHERE PIXELMONNAME = '"
+							+ pokemon.name + "'");
+			try {
+				result.next();
+				StringUtil.addCommaSeparated(baseQuery, true, pokemon.nationalPokedexNumber, pokemon.name, pokemon.name,
+						typeMap.get(pokemon.type1), typeMap.get(pokemon.type2), abilityMap.get(pokemon.ability1),
+						abilityMap.get(pokemon.ability2), abilityMap.get(pokemon.abilityHidden),
+						eggGroupMap.get(pokemon.eggGroup1), eggGroupMap.get(pokemon.eggGroup2), pokemon.eggCycles,
+						pokemon.height, pokemon.height, pokemon.height, pokemon.weight, "", pokemon.genderRatio,
+						pokemon.catchRate, result.getInt("SPAWNTIMEID"), 1, 1, pokemon.expYield, pokemon.expGroup,
+						pokemon.baseHP, pokemon.baseAtk, pokemon.baseDef, pokemon.baseSpAtk, pokemon.baseSpDef,
+						pokemon.baseSpd, pokemon.evHP, pokemon.evAtk, pokemon.evDef, pokemon.evSpAtk, pokemon.evSpDef,
+						pokemon.evSpd, 1, 100, 1.0, result.getInt("PERCENTTIMID"), result.getInt("PERCENTAGRESSIVE"),
+						result.getBoolean("ISRIDEABLE"), result.getBoolean("CANFLY"), result.getBoolean("CANSWIM"),
+						result.getBoolean("DOESHOVER"), pokemon.baseFriendship, form);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			baseQuery.append(")");
+			baseQuery.append(i < numPokemon - 1 ? ",\n" : ";\n");
+		}
+
+		return baseQuery.toString();
 	}
 }

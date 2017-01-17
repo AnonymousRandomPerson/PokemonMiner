@@ -129,6 +129,9 @@ class Controller {
 				case "fixegggroups":
 					data = randomMiner.fixEggMoveSpaces();
 					break;
+				case "mega":
+					data = miner.getMegaData();
+					break;
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
