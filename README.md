@@ -18,6 +18,7 @@ Arguments:
 * forms: Gets queries for Castform and Deoxys forms.
 * langmove: Gets translated move names and descriptions.
 * levelup: Gets queries for Generation 6 level-up moves.
+* mega: Gets queries for Mega Evolution stats.
 * move: Gets queries for Generation 6 moves.
 * movearticle: Gets wikicode for a move article.
 * moveids: Gets wikicode for the [Move IDs](http://pixelmonmod.com/wiki/index.php?title=Move_IDs) article.
