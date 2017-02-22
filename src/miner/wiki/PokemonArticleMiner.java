@@ -178,12 +178,12 @@ public class PokemonArticleMiner extends Miner {
 
 			StringBuilder abilityText = new StringBuilder();
 			String ability1 = result.getString("ABILITY1NAME");
-			ability1 = translateAbility(ability1);
+			ability1 = StringUtil.translateAbility(ability1);
 			appendLink(abilityText, ability1);
 			String ability2 = result.getString("ABILITY2NAME");
 			if (ability2 != null && !ability1.equals(ability2)) {
 				abilityText.append("/");
-				ability2 = translateAbility(ability2);
+				ability2 = StringUtil.translateAbility(ability2);
 				appendLink(abilityText, ability2);
 			} else {
 				ability2 = null;
@@ -192,7 +192,7 @@ public class PokemonArticleMiner extends Miner {
 
 			StringBuilder hiddenText = new StringBuilder();
 			String hiddenAbility = result.getString("ABILITYHIDDENNAME");
-			hiddenAbility = translateAbility(hiddenAbility);
+			hiddenAbility = StringUtil.translateAbility(hiddenAbility);
 			if (hiddenAbility != null && !hiddenAbility.equals(ability1)) {
 				appendLink(hiddenText, hiddenAbility);
 			} else {
@@ -2097,16 +2097,16 @@ public class PokemonArticleMiner extends Miner {
 						}
 						builder.append("|a1=");
 						String ability1 = result.getString("ABILITY1");
-						builder.append(translateAbility(ability1));
+						builder.append(StringUtil.translateAbility(ability1));
 						String ability2 = result.getString("ABILITY2");
 						if (ability2 != null && !ability2.equals(ability1)) {
 							builder.append("|a2=");
-							builder.append(translateAbility(ability2));
+							builder.append(StringUtil.translateAbility(ability2));
 						}
 						String hiddenAbility = result.getString("HIDDENABILITY");
 						if (hiddenAbility != null && !ability1.equals(hiddenAbility)) {
 							builder.append("|ha=");
-							builder.append(translateAbility(hiddenAbility));
+							builder.append(StringUtil.translateAbility(hiddenAbility));
 						}
 						builder.append("}}");
 					}
@@ -2177,26 +2177,11 @@ public class PokemonArticleMiner extends Miner {
 
 	/**
 	 * Appends a wiki table field to an existing table.
-	 * @param builder The string builder to append to.
 	 * @param fieldName The name of the table field.
 	 * @param fieldParameter The parameter to pass into the table.
 	 */
 	private void appendTableField(String fieldName, Object fieldParameter) {
-		if (fieldParameter != null) {
-			builder.append("\n|");
-			builder.append(fieldName);
-			builder.append("=");
-			builder.append(fieldParameter.toString());
-		}
-	}
-
-	/**
-	 * Translates an Ability into English.
-	 * @param ability The database name of the Ability.
-	 * @return The Ability's English name.
-	 */
-	private String translateAbility(String ability) {
-		return database.getLangMap().get("ability." + ability + ".name");
+		StringUtil.appendTableField(builder, fieldName, fieldParameter);
 	}
 
 	/**

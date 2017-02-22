@@ -59,6 +59,9 @@ public class Move {
 	 * @return The translated move name.
 	 */
 	public static String translate(String name) {
+		if (name.startsWith("Hidden Power")) {
+			return name;
+		}
 		return Database.getDatabase().getLangMap().get("attack." + name.toLowerCase() + ".name");
 	}
 }

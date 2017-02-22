@@ -1,6 +1,7 @@
 package miner;
 
 import database.Database;
+import miner.wiki.GymMiner;
 import miner.wiki.ImageMiner;
 import miner.wiki.ListMiner;
 import miner.wiki.PokemonArticleMiner;
@@ -38,6 +39,7 @@ class Controller {
 			ImageMiner imageMiner = new ImageMiner();
 			RandomMiner randomMiner = new RandomMiner();
 			ListMiner listMiner = new ListMiner();
+			GymMiner gymMiner = new GymMiner();
 			String data = "";
 
 			try {
@@ -132,6 +134,8 @@ class Controller {
 				case "mega":
 					data = miner.getMegaData();
 					break;
+				case "gym":
+					data = gymMiner.getGymData(name);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

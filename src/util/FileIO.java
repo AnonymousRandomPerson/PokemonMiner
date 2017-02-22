@@ -3,9 +3,12 @@ package util;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+
+import org.json.JSONObject;
 
 /**
  * Used to read from and write to files.
@@ -38,12 +41,24 @@ public class FileIO {
 			fileWriter = new FileWriter(new File(OUTPUT_FILE));
 			bufferedWriter = new BufferedWriter(fileWriter);
 	
-			fileReader = new FileReader(new File(INPUT_FILE));
-			buffer = new BufferedReader(fileReader);
+			initializeReader(INPUT_FILE);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		instance = this;
+	}
+	
+	/**
+	 * Initializes a file reader.
+	 * @param path The path of the file to read.
+	 */
+	private void initializeReader(String path) {
+		try {
+			fileReader = new FileReader(new File(path));
+			buffer = new BufferedReader(fileReader);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -64,6 +79,13 @@ public class FileIO {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		closeReadFile();
+	}
+	
+	/**
+	 * Closes the file currently being read.
+	 */
+	private void closeReadFile() {
 		try {
 			if (buffer != null) {
 				buffer.close();
@@ -98,5 +120,39 @@ public class FileIO {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * Gets the contents of a text file.
+	 * @param path The path of the file to read.
+	 * @return The contents of the specified file.
+	 */
+	public static String getFileContents(String path) {
+		instance.closeReadFile();
+		instance.initializeReader(path);
+		StringBuilder builder = new StringBuilder();
+		String line;
+		boolean first = true;
+		try {
+			while ((line = instance.buffer.readLine()) != null) {
+				if (!first) {
+					builder.append('\n');
+				}
+				builder.append(line);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return builder.toString();
+	}
+	
+	/**
+	 * Gets a JSON object from a file.
+	 * @param path The path of the file to get a JSON object from.
+	 * @return The JSON object from the file.
+	 */
+	public static JSONObject getJSONFromFile(String path) {
+		String jsonString = getFileContents(path);
+		return new JSONObject(jsonString);
 	}
 }

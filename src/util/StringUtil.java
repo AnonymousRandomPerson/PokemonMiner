@@ -3,9 +3,11 @@ package util;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import database.Database;
 import miner.storage.Pokemon;
 
 /**
@@ -452,7 +454,7 @@ public class StringUtil {
 				return "Wormadam-Trash";
 			}
 		} else if (pokemon.equals("Castform")) {
-			return form == 0 ? pokemon : "";
+			return form <= 0 ? pokemon : "";
 		} else if (pokemon.equals("Deoxys")) {
 			switch (form) {
 			case 0:
@@ -486,5 +488,73 @@ public class StringUtil {
 						"Hyperspace Fury", "Steam Eruption", "Thousand Arrows", "Thousand Waves", "Light of Ruin"));
 		}
 		return unavailableMoves;
+	}
+
+	/**
+	 * Translates an Ability into English.
+	 * @param ability The database name of the Ability.
+	 * @return The Ability's English name.
+	 */
+	public static String translateAbility(String ability) {
+		ability = ability.replace(" ", "");
+		return Database.getDatabase().getLangMap().get("ability." + ability + ".name");
+	}
+	
+	/**
+	 * Translates a held item ID into English.
+	 * @param heldItem The ID of the held item.
+	 * @return The held item's English name.
+	 */
+	public static String translateHeldItem(String heldItem) {
+		heldItem = heldItem.replace("pixelmon:", "");
+		return Database.getDatabase().getLangMap().get("item." + heldItem + ".name");
+	}
+
+	/**
+	 * Appends a wiki table field to an existing table.
+	 * @param builder The string builder to append to.
+	 * @param fieldName The name of the table field.
+	 * @param fieldParameter The parameter to pass into the table.
+	 */
+	public static void appendTableField(StringBuilder builder, String fieldName, Object fieldParameter) {
+		if (fieldParameter != null) {
+			builder.append("\n|");
+			builder.append(fieldName);
+			builder.append("=");
+			builder.append(fieldParameter.toString());
+		}
+	}
+	
+	/**
+	 * Encloses a list of strings with characters.
+	 * @param strings The strings to enclose.
+	 * @param start The string to add at the start of strings.
+	 * @param middle The string to add between strings.
+	 * @param end The string to add at the end of string.
+	 * @return The combined, enclosed string.
+	 */
+	public static String encloseStrings(List<String> strings, String start, String middle, String end) {
+		StringBuilder builder = new StringBuilder();
+		boolean first = true;
+		for (String string : strings) {
+			if (!first) {
+				builder.append(middle);
+			}
+			first = false;
+			builder.append(start);
+			builder.append(string);
+			builder.append(end);
+		}
+		return builder.toString();
+	}
+
+	/**
+	 * Separates a list of strings with characters.
+	 * @param strings The strings to separate.
+	 * @param middle The string to add between strings.
+	 * @return The combined, separated string.
+	 */
+	public static String separateStrings(List<String> strings, String middle) {
+		return encloseStrings(strings, "", middle, "");
 	}
 }

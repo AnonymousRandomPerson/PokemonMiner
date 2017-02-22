@@ -16,6 +16,7 @@ Arguments:
 * fixegggroups: Gets queries to fix an issue with parsing certain Egg Groups for Generation 6 Pokémon.
 * fixspecial: Gets queries to fix an issue with parsing the base Special Attack and Special Defense EVs for Generation 6 Pokémon.
 * forms: Gets queries for Castform and Deoxys forms.
+* gym: Gets wikicode for Gym Pokémon.
 * langmove: Gets translated move names and descriptions.
 * levelup: Gets queries for Generation 6 level-up moves.
 * mega: Gets queries for Mega Evolution stats.
