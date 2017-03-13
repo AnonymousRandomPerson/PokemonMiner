@@ -31,10 +31,10 @@ public class DropsMiner extends Miner {
 
 	/** Map of items that have special requirements for the i template. */
 	private Map<String, String> specialItemTemplates;
-	
+
 	/** Items to ignore when getting drops. */
 	private Set<String> ignoreItems;
-	
+
 	/** The JSON file containing drop data. */
 	private static final String JSON_FILE = "pokedrops.json";
 
@@ -49,8 +49,8 @@ public class DropsMiner extends Miner {
 				"Dirt", "Ink Sac", "Bone Meal", "Cactus Green", "Cocoa Beans", "Egg", "Emerald", "End Stone",
 				"Ender Pearl", "Feather", "Flower Pot", "Ghast Tear", "Glass Bottle", "Glowstone Dust", "Gold Ingot",
 				"Gold Nugget", "Gravel", "Gunpowder", "Iron Ingot", "Leather", "Prismarine Shard", "Redstone", "Sand",
-				"Sandstone", "Slimeball", "Soul Sand", "Spider Eye", "Stick", "Stone", "Granite", "String", "Sugar",
-				"Seeds", "Wool", "Yellow Wool", "Purple Wool"));
+				"Sandstone", "Slimeball", "Soul Sand", "Spider Eye", "Stone", "Granite", "String", "Sugar", "Seeds",
+				"Wool", "Yellow Wool", "Purple Wool"));
 
 		specialItemTemplates = new HashMap<>();
 		specialItemTemplates.put("Clay Block", "Clay|mc=Clay_(block)|image=Clay Block");
@@ -58,9 +58,11 @@ public class DropsMiner extends Miner {
 		specialItemTemplates.put("Mushroom2", "Mushroom|image=Red Mushroom");
 		specialItemTemplates.put("Mushroom2Block", "Mushroom|mc=Mushroom_(block)|image=Huge Red Mushroom");
 		specialItemTemplates.put("Music Disc strad", "Music Disc|image=Music Disc dusk");
-		
+		specialItemTemplates.put("Stick2", "Stick|image=Stick2");
+
 		ignoreItems = new HashSet<>();
-		ignoreItems.addAll(Arrays.asList("Cleanse Tag", "Clever Wing", "Fluffy Tail", "Genius Wing", "Iron Nugget", "Shulker Shell"));
+		ignoreItems.addAll(Arrays.asList("Cleanse Tag", "Clever Wing", "Fluffy Tail", "Genius Wing", "Honey", "Iron Nugget",
+				"Shulker Shell"));
 	}
 
 	/**
@@ -123,7 +125,7 @@ public class DropsMiner extends Miner {
 		if (pokemon.isEmpty()) {
 			pokemon = "Bulbasaur";
 		}
-		
+
 		JSONArray json = FileIO.getJSONArrayFromFile(JSON_FILE);
 		List<DropEntry> dropEntries = null;
 		for (Object object : json) {
@@ -134,7 +136,7 @@ public class DropsMiner extends Miner {
 			}
 
 			List<DropEntry> allDropEntries = getDropEntries(pokemonJSON);
-		
+
 			dropEntries = new ArrayList<>();
 			for (DropEntry dropEntry : allDropEntries) {
 				if (!ignoreItems.contains(dropEntry.translatedItem)) {
@@ -143,7 +145,7 @@ public class DropsMiner extends Miner {
 			}
 			break;
 		}
-		
+
 		if (dropEntries == null) {
 			System.out.println("Pokémon not found.");
 			return "";
@@ -151,12 +153,12 @@ public class DropsMiner extends Miner {
 			System.out.println("Pokémon has no drops.");
 			return "";
 		}
-		
+
 		dropEntries.sort(new DropComparatorItem());
-		
+
 		builder.append("==[[Drops]]==\n");
 		builder.append("{{DropH}}\n");
-		
+
 		for (DropEntry dropEntry : dropEntries) {
 			builder.append("{{Drop|");
 			builder.append(makeItemTemplate(dropEntry.translatedItem, dropEntry.item));
@@ -168,12 +170,12 @@ public class DropsMiner extends Miner {
 			builder.append(dropEntry.getRangeString());
 			builder.append("}}\n");
 		}
-		
+
 		builder.append("{{DropF}}\n");
 
 		return builder.toString();
 	}
-	
+
 	/**
 	 * Gets a wiki table for the Pokémon that drop a certain item.
 	 * @param item The item to get Pokémon for.
@@ -185,16 +187,16 @@ public class DropsMiner extends Miner {
 		if (item.isEmpty()) {
 			item = "Stone";
 		}
-		
+
 		Map<String, List<DropEntry>> dropMap = getDropMap(null);
 		if (!dropMap.containsKey(item)) {
 			System.out.println("No drop found.");
 			return "";
 		}
-		
+
 		builder.append("==Pokémon [[drops]]==\n");
 		builder.append("{{DropPokémonH}}\n");
-		
+
 		List<DropEntry> dropEntries = dropMap.get(item);
 		dropEntries.sort(new DropComparatorPokemon());
 		for (DropEntry entry : dropEntries) {
@@ -212,7 +214,7 @@ public class DropsMiner extends Miner {
 
 		return builder.toString();
 	}
-	
+
 	/**
 	 * Creates wikicode for the item (i) template.
 	 * @param item The item to pass into the template.
@@ -228,13 +230,13 @@ public class DropsMiner extends Miner {
 			builder.append(item);
 			if (!itemMCArticles.contains(item) && id.startsWith("minecraft:")) {
 				builder.append("|mc=");
-			 	builder.append(item.replaceAll(" ", "_"));
+				builder.append(item.replaceAll(" ", "_"));
 			}
 		}
 		builder.append("}}");
 		return builder.toString();
 	}
-	
+
 	/**
 	 * Gets a map of drops to the Pokémon who drop them.
 	 * @param dropKeys A list to fill with all possible drops.

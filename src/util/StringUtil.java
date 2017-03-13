@@ -522,6 +522,9 @@ public class StringUtil {
 	 * @return The translated item name
 	 */
 	public static String guessItemName(String itemID) {
+		if (itemID.equals("pixelmon:stick")) {
+			return "Stick2";
+		}
 		String filteredID = StringUtil.getSubstringBetween(itemID, ":", null);
 		filteredID = filteredID.replaceAll(":0", "");
 		Map<String, String> itemNameMap = getItemNameMap();
@@ -581,7 +584,8 @@ public class StringUtil {
 			itemNameMap.put("red_mushroom", "Mushroom2");
 			itemNameMap.put("red_mushroom_block", "Mushroom2Block");
 			itemNameMap.put("reeds", "Sugar Canes");
-			itemNameMap.put("sandstone:3", "Smooth Sandstone");
+			itemNameMap.put("sandstone:2", "Smooth Sandstone");
+			itemNameMap.put("sapling", "Oak Sapling");
 			itemNameMap.put("sapling:3", "Jungle Sapling");
 			itemNameMap.put("slime_ball", "Slimeball");
 			itemNameMap.put("stained_hardened_clay:6", "Pink Hardened Clay");
