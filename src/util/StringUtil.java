@@ -28,6 +28,12 @@ public class StringUtil {
 	
 	/** All moves that no available Pokémon can learn. */
 	private static Set<String> unavailableMoves;
+	
+	/** Map from item IDs to abnormal item names. */
+	private static Map<String, String> itemNameMap;
+	
+	/** Corrects the names of certain Pokémon that are spelled incorrectly due to restrictions. */
+	private static Map<String, String> pokemonCorrectMap;
 
 	/**
 	 * Shortens a string by a certain amount.
@@ -509,6 +515,115 @@ public class StringUtil {
 		heldItem = heldItem.replace("pixelmon:", "");
 		return Database.getDatabase().getLangMap().get("item." + heldItem + ".name");
 	}
+	
+	/**
+	 * Attempts to form a translated item name based on its ID.
+	 * @param itemID The ID of the item.
+	 * @return The translated item name
+	 */
+	public static String guessItemName(String itemID) {
+		String filteredID = StringUtil.getSubstringBetween(itemID, ":", null);
+		filteredID = filteredID.replaceAll(":0", "");
+		Map<String, String> itemNameMap = getItemNameMap();
+		if (itemNameMap.containsKey(filteredID)) {
+			return itemNameMap.get(filteredID);
+		}
+		String[] splitString = filteredID.split("_");
+		String newName = "";
+		for (String part : splitString) {
+			if (!newName.isEmpty()) {
+				newName += " ";
+			}
+			newName += Character.toUpperCase(part.charAt(0));
+			if (part.length() > 1) {
+				newName += part.substring(1);
+			}
+		}
+		return newName;
+	}
+	
+	/**
+	 * Gets the item name map. Initializes it if not already initialized.
+	 * @return The item name map.
+	 */
+	private static Map<String, String> getItemNameMap() {
+		if (itemNameMap == null) {
+			itemNameMap = new HashMap<>();
+			itemNameMap.put("beef", "Raw Beef");
+			itemNameMap.put("brown_mushroom", "Mushroom1");
+			itemNameMap.put("chicken", "Raw Chicken");
+			itemNameMap.put("dirt:1", "Coarse Dirt");
+			itemNameMap.put("double_plant", "Sunflower");
+			itemNameMap.put("double_plant:4", "Rose Bush");
+			itemNameMap.put("double_plant:5", "Peony");
+			itemNameMap.put("dye", "Ink Sac");
+			itemNameMap.put("dye:15", "Bone Meal");
+			itemNameMap.put("dye:2", "Cactus Green");
+			itemNameMap.put("dye:3", "Cocoa Beans");
+			itemNameMap.put("fish", "Raw Fish");
+			itemNameMap.put("fish:1", "Raw Salmon");
+			itemNameMap.put("fish:3", "Pufferfish");
+			itemNameMap.put("iron_block", "Block of Iron");
+			itemNameMap.put("log", "Oak Wood");
+			itemNameMap.put("log:1", "Spruce Wood");
+			itemNameMap.put("mutton", "Raw Mutton");
+			itemNameMap.put("noteblock", "Note Block");
+			itemNameMap.put("porkchop", "Raw Porkchop");
+			itemNameMap.put("prismarine:2", "Dark Prismarine");
+			itemNameMap.put("quartz", "Nether Quartz");
+			itemNameMap.put("rabbit", "Raw Rabbit");
+			itemNameMap.put("record_strad", "Music Disc strad");
+			itemNameMap.put("red_flower", "Poppy");
+			itemNameMap.put("red_flower:2", "Allium");
+			itemNameMap.put("red_flower:3", "Azure Bluet");
+			itemNameMap.put("red_flower:5", "Orange Tulip");
+			itemNameMap.put("red_flower:6", "Pink Tulip");
+			itemNameMap.put("red_mushroom", "Mushroom2");
+			itemNameMap.put("red_mushroom_block", "Mushroom2Block");
+			itemNameMap.put("reeds", "Sugar Canes");
+			itemNameMap.put("sandstone:3", "Smooth Sandstone");
+			itemNameMap.put("sapling:3", "Jungle Sapling");
+			itemNameMap.put("slime_ball", "Slimeball");
+			itemNameMap.put("stained_hardened_clay:6", "Pink Hardened Clay");
+			itemNameMap.put("stone:1", "Granite");
+			itemNameMap.put("stone:2", "Polished Granite");
+			itemNameMap.put("stone:3", "Diorite");
+			itemNameMap.put("stone:5", "Andesite");
+			itemNameMap.put("stone:6", "Polished Andesite");
+			itemNameMap.put("tallgrass", "Grass");
+			itemNameMap.put("vine", "Vines");
+			itemNameMap.put("waterlily", "Lily Pad");
+			itemNameMap.put("web", "Cobweb");
+			itemNameMap.put("wheat:1", "Wheat");
+			itemNameMap.put("wheat_seeds", "Seeds");
+			itemNameMap.put("wool:10", "Purple Wool");
+			itemNameMap.put("wool:4", "Yellow Wool");
+			itemNameMap.put("yellow_flower", "Dandelion");
+			itemNameMap.put("aluminium_ingot", "Aluminum Ingot");
+			itemNameMap.put("aluminium_plate", "Aluminum Plate");
+			itemNameMap.put("ever_stone", "Everstone");
+			itemNameMap.put("kings_rock", "King's Rock");
+			itemNameMap.put("poke_ball_lid", "Poké Ball Lid");
+			itemNameMap.put("pokemail_air", "Air Mail");
+			itemNameMap.put("pokemail_bubble", "Bubble Mail");
+			itemNameMap.put("pokemail_grass", "Grass Mail");
+			itemNameMap.put("pokemail_inquiry", "Inquiry Mail");
+			itemNameMap.put("pokemail_wave", "Wave Mail");
+			itemNameMap.put("pokemail_wood", "Wood Mail");
+			itemNameMap.put("up-grade", "Up-Grade");
+			itemNameMap.put("clay_ball", "Clay");
+			itemNameMap.put("clay", "Clay Block");
+			itemNameMap.put("leaves", "Oak Leaves");
+			itemNameMap.put("flint_and_steel", "Flint and Steel");
+			itemNameMap.put("gs_ball", "GS Ball");
+			itemNameMap.put("never_melt_ice", "Never-Melt Ice");
+			itemNameMap.put("pc", "PC");
+			itemNameMap.put("poke_ball", "Poké Ball");
+			itemNameMap.put("pokemail_glitter", "Glitter Mail");
+			itemNameMap.put("rabbit_foot", "Rabbit's Foot");
+		}
+		return itemNameMap;
+	}
 
 	/**
 	 * Appends a wiki table field to an existing table.
@@ -556,5 +671,34 @@ public class StringUtil {
 	 */
 	public static String separateStrings(List<String> strings, String middle) {
 		return encloseStrings(strings, "", middle, "");
+	}
+	
+	/**
+	 * Corrects the name of a Pokémon whose name is spelled incorrectly.
+	 * @param name The name of the Pokémon.
+	 * @return The corrected name.
+	 */
+	public static String correctPokemonName(String name) {
+		Map<String, String> pokemonCorrectMap = getPokemonCorrectMap();
+		if (pokemonCorrectMap.containsKey(name)) {
+			return pokemonCorrectMap.get(name);
+		}
+		return name;
+	}
+	
+	/**
+	 * Gets the Pokémon corrected name map. Loads the map if uninitialized.
+	 * @return The Pokémon corrected name map.
+	 */
+	private static Map<String, String> getPokemonCorrectMap() {
+		if (pokemonCorrectMap == null) {
+			pokemonCorrectMap = new HashMap<>();
+			pokemonCorrectMap.put("Ho-oh", "Ho-Oh");
+			pokemonCorrectMap.put("MrMime", "Mr. Mime");
+			pokemonCorrectMap.put("Nidoranfemale", "Nidoran♀");
+			pokemonCorrectMap.put("Nidoranmale", "Nidoran♂");
+			pokemonCorrectMap.put("Farfetchd", "Farfetch'd");
+		}
+		return pokemonCorrectMap;
 	}
 }

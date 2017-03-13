@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -154,5 +155,15 @@ public class FileIO {
 	public static JSONObject getJSONFromFile(String path) {
 		String jsonString = getFileContents(path);
 		return new JSONObject(jsonString);
+	}
+	
+	/**
+	 * Gets a JSON array from a file.
+	 * @param path The path of the file to get a JSON array from.
+	 * @return The JSON array from the file.
+	 */
+	public static JSONArray getJSONArrayFromFile(String path) {
+		String jsonString = getFileContents(path);
+		return new JSONArray(jsonString);
 	}
 }

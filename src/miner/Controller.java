@@ -1,6 +1,7 @@
 package miner;
 
 import database.Database;
+import miner.wiki.DropsMiner;
 import miner.wiki.GymMiner;
 import miner.wiki.ImageMiner;
 import miner.wiki.ListMiner;
@@ -40,6 +41,7 @@ class Controller {
 			RandomMiner randomMiner = new RandomMiner();
 			ListMiner listMiner = new ListMiner();
 			GymMiner gymMiner = new GymMiner();
+			DropsMiner dropsMiner = new DropsMiner();
 			String data = "";
 
 			try {
@@ -136,6 +138,15 @@ class Controller {
 					break;
 				case "gym":
 					data = gymMiner.getGymData(name);
+					break;
+				case "dropsall":
+					data = dropsMiner.getAllDrops();
+					break;
+				case "drops":
+					data = dropsMiner.getDrops(name);
+					break;
+				case "dropitem":
+					data = dropsMiner.getDropPokemon(name);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

@@ -8,6 +8,9 @@ Arguments:
 * available: Gets wikicode for the [Available Pokémon](http://pixelmonmod.com/wiki/index.php?title=Available_Pok%C3%A9mon) article.
 * availableprogress: Gets wikicode for the [Available Pokémon/Progress](http://pixelmonmod.com/wiki/index.php?title=Available_Pok%C3%A9mon/Progress) article.
 * biome: Gets wikicode for a biome article and its rarity template.
+* dropitem: Gets wikicode for a table of Pokémon that drop a certain item.
+* drops: Gets wikicode for a table of drops that a Pokémon has.
+* dropsall: Gets wikicode for a table listing all drops and the Pokémon that drop them.
 * egg: Gets queries for Generation 6 Egg move data for Generation 6 Pokémon.
 * egggroup: Gets wikicode for an Egg Group article.
 * eggold: Gets queries for Generation 6 Egg move data for Generation 1-5 Pokémon.
@@ -40,3 +43,4 @@ Arguments:
 * Pixelmon English language translation file
 * Enum source files from the Pixelmon mod source
 * Pokémon minisprites
+* Pokémon drops JSON file
