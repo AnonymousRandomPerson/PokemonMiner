@@ -37,6 +37,7 @@ Arguments:
 * tutorlist: Gets wikicode for the list of moves in the [Move tutor](http://pixelmonmod.com/wiki/index.php?title=Move_tutor) article.
 * type: Gets wikicode for a type article.
 * unavailable: Converts unavailable Pokémon minisprites to grayscale.
+* unavailablemega: Converts unavailable Mega Evolution minisprites to grayscale.
 
 ## Not included in this repository
 * Pixelmon database

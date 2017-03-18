@@ -1,5 +1,6 @@
 package miner.wiki;
 
+import java.io.File;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -11,6 +12,7 @@ import miner.Miner;
 import miner.storage.DexNumberContainer;
 import miner.storage.Move;
 import miner.storage.Pokemon;
+import pixelmon.EnumPokemon;
 import util.APIConnection;
 import util.StringUtil;
 
@@ -95,6 +97,68 @@ public class ListMiner extends Miner {
 		builder.append("\n==Generation 7==\n");
 		builder.append("*0/81 Pokémon ({{percent|0|81}})\n");
 		builder.append("*No Pokémon from Generation 7 will be added until Generation 8 is released.");
+		
+		builder.append("\n==Mega Evolutions==\n");
+		String folder = "megas";
+		File megaFolder = new File(folder);
+		File[] megaFiles = megaFolder.listFiles();
+		int totalMegas = megaFiles.length;
+		int currentMegas = 0;
+		images = new StringBuilder();
+		for (File file : megaFiles) {
+			String fileName = file.getName();
+			String[] nameSplit = fileName.replace(".png", "").split("-");
+			int dexNumber = Integer.parseInt(nameSplit[0]);
+			String dexString = StringUtil.convertDexNumberString(dexNumber);
+			
+			currentIndex = totalRaw.indexOf("|" + dexString + "|");
+			if (dexNumber <= 151) {
+				currentIndex = totalRaw.indexOf("|" + dexString + "|", currentIndex + 1);
+			}
+			int nameIndex = currentIndex + 5;
+			int endIndex = totalRaw.indexOf('|', nameIndex);
+			
+			String pokemonName = totalRaw.substring(nameIndex, endIndex);
+			pokemonName.trim();
+			
+			String prefix = StringUtil.capitalizeFirst(nameSplit[1]);
+			String suffix = nameSplit.length > 2 ? StringUtil.capitalizeFirst(nameSplit[2]) : "";
+			boolean hasMega = EnumPokemon.hasMega(pokemonName);
+			if (hasMega) {
+				currentMegas++;
+			}
+			images.append("[[File:");
+			images.append(prefix);
+			if (hasMega) {
+				images.append(' ');
+			}
+			images.append(pokemonName);
+			if (!suffix.isEmpty()) {
+				if (hasMega) {
+					images.append(' ');
+				}
+				images.append(suffix);
+			}
+			if (!hasMega) {
+				images.append("Gray");
+			}
+			images.append(".png|32px");
+			if (EnumPokemon.isPokemon(pokemonName)) {
+				images.append("|link=");
+				images.append(pokemonName);
+			}
+			images.append("]]\n");
+		}
+		builder.append('*');
+		builder.append(currentMegas);
+		builder.append('/');
+		builder.append(totalMegas);
+		builder.append(" [[Mega Evolutions]] ({{percent|");
+		builder.append(currentMegas);
+		builder.append('|');
+		builder.append(totalMegas);
+		builder.append("}})\n\n");
+		builder.append(images);
 
 		return builder.toString();
 	}

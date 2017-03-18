@@ -147,6 +147,10 @@ class Controller {
 					break;
 				case "dropitem":
 					data = dropsMiner.getDropPokemon(name);
+					break;
+				case "unavailablemega":
+					imageMiner.getUnavailableMegas();
+					break;
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

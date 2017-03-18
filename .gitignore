@@ -25,3 +25,5 @@ src/pixelmon/*
 Pixelmon2.trace.db
 gyms/*
 pokedrops.json
+images/*
+megas/*

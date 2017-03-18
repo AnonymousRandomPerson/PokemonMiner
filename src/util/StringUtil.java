@@ -537,12 +537,25 @@ public class StringUtil {
 			if (!newName.isEmpty()) {
 				newName += " ";
 			}
-			newName += Character.toUpperCase(part.charAt(0));
-			if (part.length() > 1) {
-				newName += part.substring(1);
-			}
+			newName += capitalizeFirst(part);
 		}
 		return newName;
+	}
+	
+	/**
+	 * Capitalizes the first character of a string.
+	 * @param string The string to capitalize.
+	 * @return The capitalized string.
+	 */
+	public static String capitalizeFirst(String string) {
+		if (string.isEmpty()) {
+			return string;
+		}
+		String newString = Character.toString(Character.toUpperCase(string.charAt(0)));
+		if (string.length() > 1) {
+			newString += string.substring(1);
+		}
+		return newString;
 	}
 	
 	/**
