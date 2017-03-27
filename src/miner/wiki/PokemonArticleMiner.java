@@ -44,6 +44,10 @@ public class PokemonArticleMiner extends Miner {
 		builder = new StringBuilder();
 
 		String englishName = Pokemon.getTranslatedName(pokemon);
+		if (englishName == null) {
+			System.out.println("Pokémon not found: " + pokemon);
+			return "";
+		}
 		totalRaw = APIConnection.getArticleSourcePixelmon(englishName);
 		boolean missingHeader = false;
 		if (!totalRaw.isEmpty()) {
@@ -578,8 +582,10 @@ public class PokemonArticleMiner extends Miner {
 					builder.append("\nSee [[Legendary Pokémon#Spawning]].");
 				}
 			}
-
-			preserveSection("==[[Drops]]==");
+			
+			DropsMiner dropsMiner = new DropsMiner();
+			builder.append('\n');
+			builder.append(dropsMiner.getDrops(pokemon));
 
 			builder.append("\n==Stats==\n{{BaseStats");
 			appendTableField("type", type1.toLowerCase());

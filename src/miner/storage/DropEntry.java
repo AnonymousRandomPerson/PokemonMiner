@@ -19,6 +19,8 @@ public class DropEntry {
 	public int max;
 	/** Whether the item is a "rare" drop. */
 	public boolean isRare;
+	/** The percentage chance of the item drop occurring. */
+	public float percent;
 	
 	/**
 	 * Initializes a drop entry.
@@ -34,6 +36,7 @@ public class DropEntry {
 		this.min = min;
 		this.max = max;
 		this.isRare = isRare;
+		this.percent = getPercent();
 	}
 
 	/**
@@ -56,13 +59,38 @@ public class DropEntry {
 	 * @return The percentage chance of the item drop occurring.
 	 */
 	public float getPercent() {
-		float percent = 100;
-		if (min == 0) {
-			percent *= max / (max + 1f);
-		}
-		if (isRare) {
-			percent *= 0.1f;
+		if (percent == 0) {
+			percent = 100;
+			if (min == 0) {
+				percent *= max / (max + 1f);
+			}
+			if (isRare) {
+				percent *= 0.1f;
+			}
 		}
 		return percent;
+	}
+	
+	/**
+	 * Checks if the drop entry has the same item as another entry.
+	 * @param other The entry to compare against.
+	 * @return Whether the drop entry has the same item as another entry.
+	 */
+	public boolean hasSameItem(DropEntry other) {
+		return item.equals(other.item);
+	}
+	
+	/**
+	 * Combines two drop entries into a new drop entry.
+	 * @param other The drop entry to combine with this entry.
+	 * @return The combined drop entry.
+	 */
+	public DropEntry combineEntries(DropEntry other) {
+		int newMin = min + other.min;
+		int newMax = max + other.max;
+		boolean newIsRare = isRare && other.isRare;
+		DropEntry newEntry = new DropEntry(pokemon, item, newMin, newMax, newIsRare);
+		newEntry.percent = 100 - ((1 - percent / 100) * (1 - other.percent / 100) * 100);
+		return newEntry;
 	}
 }

@@ -63,6 +63,7 @@ public class Database {
 		if (instance == null) {
 			instance = new Database();
 		}
+		instance.getConnection();
 		return instance;
 	}
 
@@ -114,6 +115,7 @@ public class Database {
 		connection = null;
 		statement = null;
 		resultSet = null;
+		madeConnection = false;
 	}
 
 	/**
@@ -368,7 +370,9 @@ public class Database {
 			try {
 				while ((line = reader.readLine()) != null) {
 					String[] keyValue = line.split("=", 2);
-					langMap.put(keyValue[0], keyValue[1]);
+					if (keyValue.length == 2) {
+						langMap.put(keyValue[0], keyValue[1]);
+					}
 				}
 			} catch (IOException e) {
 				e.printStackTrace();

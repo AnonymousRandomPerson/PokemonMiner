@@ -45,8 +45,8 @@ public class DropsMiner extends Miner {
 		super();
 
 		itemMCArticles = new HashSet<>();
-		itemMCArticles.addAll(Arrays.asList("Apple", "Blaze Powder", "Blaze Rod", "Bone", "Cobblestone", "Diamond",
-				"Dirt", "Ink Sac", "Bone Meal", "Cactus Green", "Cocoa Beans", "Egg", "Emerald", "End Stone",
+		itemMCArticles.addAll(Arrays.asList("Apple", "Blaze Powder", "Blaze Rod", "Bone", "Clay", "Cobblestone",
+				"Diamond", "Dirt", "Ink Sac", "Bone Meal", "Cactus Green", "Cocoa Beans", "Emerald", "End Stone",
 				"Ender Pearl", "Feather", "Flower Pot", "Ghast Tear", "Glass Bottle", "Glowstone Dust", "Gold Ingot",
 				"Gold Nugget", "Gravel", "Gunpowder", "Iron Ingot", "Leather", "Prismarine Shard", "Redstone", "Sand",
 				"Sandstone", "Slimeball", "Soul Sand", "Spider Eye", "Stone", "Granite", "String", "Sugar", "Seeds",
@@ -54,15 +54,16 @@ public class DropsMiner extends Miner {
 
 		specialItemTemplates = new HashMap<>();
 		specialItemTemplates.put("Clay Block", "Clay|mc=Clay_(block)|image=Clay Block");
-		specialItemTemplates.put("Mushroom1", "Mushroom|image=Brown Mushroom");
-		specialItemTemplates.put("Mushroom2", "Mushroom|image=Red Mushroom");
+		specialItemTemplates.put("Metronome", "Metronome||Metronome (item)");
+		specialItemTemplates.put("Mushroom1", "Mushroom|mc=Mushroom|image=Brown Mushroom");
+		specialItemTemplates.put("Mushroom2", "Mushroom|mc=Mushroom|image=Red Mushroom");
 		specialItemTemplates.put("Mushroom2Block", "Mushroom|mc=Mushroom_(block)|image=Huge Red Mushroom");
-		specialItemTemplates.put("Music Disc strad", "Music Disc|image=Music Disc dusk");
+		specialItemTemplates.put("Music Disc strad", "Music Disc|mc=Music_Disc|image=Music Disc dusk");
 		specialItemTemplates.put("Stick2", "Stick|image=Stick2");
 
 		ignoreItems = new HashSet<>();
-		ignoreItems.addAll(Arrays.asList("Cleanse Tag", "Clever Wing", "Fluffy Tail", "Genius Wing", "Honey", "Iron Nugget",
-				"Shulker Shell"));
+		ignoreItems.addAll(Arrays.asList("Cleanse Tag", "Clever Wing", "Fluffy Tail", "Genius Wing", "Honey",
+				"Iron Nugget", "Shulker Shell"));
 	}
 
 	/**
@@ -123,7 +124,7 @@ public class DropsMiner extends Miner {
 		builder = new StringBuilder();
 
 		if (pokemon.isEmpty()) {
-			pokemon = "Bulbasaur";
+			pokemon = "Dewgong";
 		}
 
 		JSONArray json = FileIO.getJSONArrayFromFile(JSON_FILE);
@@ -147,10 +148,10 @@ public class DropsMiner extends Miner {
 		}
 
 		if (dropEntries == null) {
-			System.out.println("Pokémon not found.");
+			System.out.println("Pokémon not found.: " + pokemon);
 			return "";
 		} else if (dropEntries.isEmpty()) {
-			System.out.println("Pokémon has no drops.");
+			System.out.println(pokemon + " has no drops.");
 			return "";
 		}
 
@@ -185,7 +186,7 @@ public class DropsMiner extends Miner {
 		builder = new StringBuilder();
 
 		if (item.isEmpty()) {
-			item = "Stone";
+			item = "Yellow Wool";
 		}
 
 		Map<String, List<DropEntry>> dropMap = getDropMap(null);
@@ -287,6 +288,23 @@ public class DropsMiner extends Miner {
 		ListUtil.addIfNotNull(dropList, getDropEntry(pokemonJSON, "optdrop1", false));
 		ListUtil.addIfNotNull(dropList, getDropEntry(pokemonJSON, "optdrop2", false));
 		ListUtil.addIfNotNull(dropList, getDropEntry(pokemonJSON, "raredrop", true));
+		// Check for duplicate entries.
+		int numDrops = dropList.size();
+		List<DropEntry> removeList = new ArrayList<>();
+		List<DropEntry> addList = new ArrayList<>();
+		for (int i = 0; i < numDrops - 1; i++) {
+			DropEntry firstDrop = dropList.get(i);
+			for (int j = 1; j < numDrops; j++) {
+				DropEntry secondDrop = dropList.get(j);
+				if (i != j && firstDrop.hasSameItem(secondDrop)) {
+					removeList.add(firstDrop);
+					removeList.add(secondDrop);
+					addList.add(firstDrop.combineEntries(secondDrop));
+				}
+			}
+		}
+		dropList.removeAll(removeList);
+		dropList.addAll(addList);
 		return dropList;
 	}
 

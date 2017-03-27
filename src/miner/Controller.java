@@ -1,5 +1,9 @@
 package miner;
 
+import java.awt.datatransfer.*;
+import java.awt.Toolkit;
+import java.util.Scanner;
+
 import database.Database;
 import miner.wiki.DropsMiner;
 import miner.wiki.GymMiner;
@@ -20,18 +24,50 @@ class Controller {
 	@SuppressWarnings("unused")
 	public static void main(String[] args) {
 		String minerType = "";
-		if (args.length > 0) {
-			minerType = args[0];
-		}
 		String name = "";
-		if (args.length > 1) {
-			name = args[1];
-			for (int i = 2; i < args.length; i++) {
-				name += " " + args[i];
+		boolean repeat = true;
+		Scanner input = new Scanner(System.in);
+		do {
+			if (args.length > 0) {
+				minerType = args[0];
+			} else {
+				System.out.println("Enter a miner:");
+				minerType = input.nextLine();
 			}
-		}
+			if (args.length > 1) {
+				name = args[1];
+				for (int i = 2; i < args.length; i++) {
+					name += " " + args[i];
+				}
+			} else if (args.length == 0) {
+				System.out.println("Enter a name:");
+				name = input.nextLine();
+			}
+			do {
+				runMiner(minerType, name);
+				
+				if (repeat) {
+					System.out.println("Enter a name:");
+					name = input.nextLine();
+					if (name.equals("b")) {
+						break;
+					}
+				}
+			} while (repeat && !name.equals("q"));
+		} while (repeat && !name.equals("q"));
+		input.close();
+	}
+	
+	/**
+	 * Runs the chosen miner.
+	 * @param minerType The type of miner to run.
+	 * @param name A name to pass into the chosen miner.
+	 */
+	private static void runMiner(String minerType, String name) {
+		boolean copyClipboard = true;
 		long beforeTime = System.currentTimeMillis();
 		FileIO fileIO = new FileIO();
+		String data = "";
 		try {
 			Database database = Database.getDatabase();
 			PokemonMiner miner = new PokemonMiner();
@@ -42,7 +78,6 @@ class Controller {
 			ListMiner listMiner = new ListMiner();
 			GymMiner gymMiner = new GymMiner();
 			DropsMiner dropsMiner = new DropsMiner();
-			String data = "";
 
 			try {
 				switch (minerType) {
@@ -163,6 +198,11 @@ class Controller {
 			e.printStackTrace();
 		} finally {
 			fileIO.closeFiles();
+		}
+		if (copyClipboard && !data.isEmpty()) {
+			StringSelection stringSelection = new StringSelection(data);
+			Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
+			clpbrd.setContents(stringSelection, null);
 		}
 		System.out.println("Finished in " + ((System.currentTimeMillis() - beforeTime) / 1000) + " seconds.");
 	}
