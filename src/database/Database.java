@@ -73,13 +73,11 @@ public class Database {
 	public void getConnection() {
 		try {
 			if (!madeConnection || connection.isClosed()) {
-				System.out.println("Loading database driver.");
 				Class.forName("org.h2.Driver");
-				System.out.println("Establishing connection.");
 				connection = DriverManager.getConnection("jdbc:h2:file:Pixelmon2");
 				madeConnection = true;
 				statement = connection.createStatement();
-				System.out.println("Connection successful.");
+				System.out.println("Database connection successful.");
 			}
 		} catch (Exception e) {
 			System.out.println("Could not get a connection to database.");

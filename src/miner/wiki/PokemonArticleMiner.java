@@ -1211,7 +1211,8 @@ public class PokemonArticleMiner extends Miner {
 
 		builder = new StringBuilder();
 		builder.append("{{MoveInfobox");
-		appendTableField("name", Move.translate(move));
+		String translatedMove = Move.translate(move);
+		appendTableField("name", translatedMove);
 
 		StringBuilder query = new StringBuilder();
 		query.append(
@@ -1224,7 +1225,10 @@ public class PokemonArticleMiner extends Miner {
 		ResultSet result = database.executeQuery(query);
 
 		try {
-			result.next();
+			if (!result.next()) {
+				System.out.println("Move not found: " + move);
+				return "";
+			}
 			int moveID = result.getInt("MOVEID");
 
 			String type = result.getString("TYPE");
@@ -1314,6 +1318,9 @@ public class PokemonArticleMiner extends Miner {
 				moveArticle += " (move)";
 			}
 			totalRaw = APIConnection.getArticleSourcePixelmon(moveArticle);
+			if (totalRaw.startsWith("#REDIRECT") && !moveArticle.equals(translatedMove)) {
+				totalRaw = APIConnection.getArticleSourcePixelmon(translatedMove);
+			}
 			if (!totalRaw.isEmpty()) {
 				StringUtil.currentRaw = totalRaw;
 				String externalMove = StringUtil.getTableEntry("external");
@@ -1324,9 +1331,9 @@ public class PokemonArticleMiner extends Miner {
 
 			builder.append("\n}}\n");
 
-			int descriptionIndex = totalRaw.indexOf(move + " is");
+			int descriptionIndex = totalRaw.indexOf(translatedMove + " is");
 			if (descriptionIndex == -1) {
-				System.out.println("Can't find move description.");
+				System.out.println("Can't find move description: " + translatedMove);
 				builder.append(move);
 				builder.append(" is a ");
 				boolean isDamage = !category.equals("Status");
@@ -1708,6 +1715,8 @@ public class PokemonArticleMiner extends Miner {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
+		builder.append("\n[[Category:Moves]]");
 
 		return builder.toString();
 	}
