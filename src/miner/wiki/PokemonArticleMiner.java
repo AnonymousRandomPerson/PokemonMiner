@@ -1190,6 +1190,14 @@ public class PokemonArticleMiner extends Miner {
 
 			builder.append(eggMovesTable);
 			builder.append('\n');
+			
+			builder.append("{{Env|");
+			builder.append(type1);
+			if (type2 != null) {
+				builder.append('|');
+				builder.append(type2);
+			}
+			builder.append("}}\n");
 
 			builder.append(pastModels);
 		} catch (SQLException e) {
