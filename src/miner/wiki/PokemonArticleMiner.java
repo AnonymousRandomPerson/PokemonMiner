@@ -123,20 +123,9 @@ public class PokemonArticleMiner extends Miner {
 				}
 				StringUtil.currentRaw = totalRaw.substring(0, statIndex);
 
-				String altName = StringUtil.getTableEntry("altname");
-				if (altName != null) {
-					appendTableField("altname", altName.trim());
-				}
-
-				String imagePath = StringUtil.getTableEntry("image");
-				if (imagePath != null) {
-					appendTableField("image", imagePath.trim());
-				}
-
-				String sketchfabHash = StringUtil.getTableEntry("sketchfab");
-				if (sketchfabHash != null) {
-					appendTableField("sketchfab", sketchfabHash.trim());
-				}
+				preserveTableEntry("altname");
+				preserveTableEntry("image");
+				preserveTableEntry("sketchfab");
 			}
 
 			StringBuilder pastModels = new StringBuilder();
@@ -450,6 +439,11 @@ public class PokemonArticleMiner extends Miner {
 				appendTableField("location", locationString.toString());
 			}
 
+			preserveTableEntry("modeled");
+			preserveTableEntry("textured");
+			preserveTableEntry("animated");
+			preserveTableEntry("voiced");
+
 			builder.append("\n}}\n");
 
 			if (StringUtil.currentRaw != null) {
@@ -582,7 +576,7 @@ public class PokemonArticleMiner extends Miner {
 					builder.append("\nSee [[Legendary Pokémon#Spawning]].");
 				}
 			}
-			
+
 			DropsMiner dropsMiner = new DropsMiner();
 			builder.append('\n');
 			builder.append(dropsMiner.getDrops(pokemon));
@@ -1190,7 +1184,7 @@ public class PokemonArticleMiner extends Miner {
 
 			builder.append(eggMovesTable);
 			builder.append('\n');
-			
+
 			builder.append("{{Env|");
 			builder.append(type1);
 			if (type2 != null) {
@@ -1723,7 +1717,7 @@ public class PokemonArticleMiner extends Miner {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
+
 		builder.append("\n[[Category:Moves]]");
 
 		return builder.toString();
@@ -2249,6 +2243,20 @@ public class PokemonArticleMiner extends Miner {
 			stringBuilder.append(" (Ability)|Healer");
 		}
 		stringBuilder.append("]]");
+	}
+	
+	/**
+	 * Keeps a table entry that was in the original article.
+	 * @param key The key of the table entry.
+	 */
+	private void preserveTableEntry(String key) {
+		if (StringUtil.currentRaw == null) {
+			return;
+		}
+		String entry = StringUtil.getTableEntry(key);
+		if (entry != null) {
+			appendTableField(key, entry.trim());
+		}
 	}
 
 	/**
