@@ -31,6 +31,7 @@ Arguments:
 * pokedex: Gets Pokédex entries.
 * pokemon: Gets queries for Generation 6 Pokémon stats.
 * shiny: Converts the file names of Shiny Pokémon images from Pixelmon source to wiki-friendly names.
+* shinydump: Gets wikicode for Shiny Pokémon minisprites to dump [here](http://pixelmonmod.com/wiki/index.php?title=User:Some_Body/File_dump) in order to prevent them from showing up as unused.
 * spawnlocation: Gets wikicode for the [Spawn location](http://pixelmonmod.com/wiki/index.php?title=Spawn_location) article.
 * tm: Gets queries for Generation 6 TM/HM move compatibilities.
 * tutor: Gets queries for Generation 6 tutor move compatibilities.

@@ -45,12 +45,12 @@ public class DropsMiner extends Miner {
 		super();
 
 		itemMCArticles = new HashSet<>();
-		itemMCArticles.addAll(Arrays.asList("Apple", "Blaze Powder", "Blaze Rod", "Bone", "Clay", "Cobblestone",
-				"Diamond", "Dirt", "Ink Sac", "Bone Meal", "Cactus Green", "Cocoa Beans", "Emerald", "End Stone",
-				"Ender Pearl", "Feather", "Flower Pot", "Ghast Tear", "Glass Bottle", "Glowstone Dust", "Gold Ingot",
-				"Gold Nugget", "Gravel", "Gunpowder", "Iron Ingot", "Leather", "Prismarine Shard", "Redstone", "Sand",
-				"Sandstone", "Slimeball", "Soul Sand", "Spider Eye", "Stone", "Granite", "String", "Sugar", "Seeds",
-				"Wool", "Yellow Wool", "Purple Wool"));
+		itemMCArticles.addAll(Arrays.asList("Apple", "Blaze Powder", "Blaze Rod", "Block of Iron", "Bone", "Cactus",
+				"Clay", "Cobblestone", "Diamond", "Dirt", "Ink Sac", "Bone Meal", "Cactus Green", "Cocoa Beans",
+				"Emerald", "End Stone", "Ender Pearl", "Feather", "Flower Pot", "Ghast Tear", "Glass Bottle",
+				"Glowstone Dust", "Gold Ingot", "Gold Nugget", "Gravel", "Gunpowder", "Iron Ingot", "Lava Bucket",
+				"Leather", "Prismarine Shard", "Redstone", "Sand", "Sandstone", "Slimeball", "Soul Sand", "Spider Eye",
+				"Stone", "Granite", "String", "Sugar", "Seeds", "Wool", "Yellow Wool", "Purple Wool"));
 
 		specialItemTemplates = new HashMap<>();
 		specialItemTemplates.put("Clay Block", "Clay|mc=Clay_(block)|image=Clay Block");
@@ -271,7 +271,13 @@ public class DropsMiner extends Miner {
 				dropMap.put(dropEntry.translatedItem, dropList);
 			}
 		}
+		List<DropEntry> dropList = new ArrayList<>();
+		DropEntry entry = new DropEntry("Delibird", "pixelmon:gift_box", 1, 1, false);
+		entry.special = true;
+		dropList.add(entry);
+		dropMap.put(entry.translatedItem, dropList);
 		if (dropKeys != null) {
+			dropKeys.add(entry.translatedItem);
 			Collections.sort(dropKeys);
 		}
 		return dropMap;

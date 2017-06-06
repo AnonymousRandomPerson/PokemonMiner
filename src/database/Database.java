@@ -47,6 +47,9 @@ public class Database {
 	
 	/** The singleton instance of the database. */
 	private static Database instance;
+
+	/** The name of the file that data is read from. */
+	public static final String LANG_FILE = "en_US.lang";
 	
 	/**
 	 * Connects to the database.
@@ -363,6 +366,7 @@ public class Database {
 	public Map<String, String> getLangMap() {
 		if (langMap == null) {
 			langMap = new HashMap<>();
+			FileIO.getInstance().initializeReader(LANG_FILE);
 			BufferedReader reader = FileIO.getReadBuffer();
 			String line;
 			try {

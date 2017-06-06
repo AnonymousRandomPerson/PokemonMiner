@@ -186,6 +186,11 @@ class Controller {
 				case "unavailablemega":
 					imageMiner.getUnavailableMegas();
 					break;
+				case "shinydump":
+					data = imageMiner.getShinyDump();
+					break;
+				default:
+					System.out.println("No miner found for: " + minerType);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

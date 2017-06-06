@@ -18,8 +18,6 @@ public class FileIO {
 
 	/** The name of the file that queries are written to. */
 	private static final String OUTPUT_FILE = "Output.txt";
-	/** The name of the file that data is read from. */
-	private static final String INPUT_FILE = "en_US.lang";
 
 	/** Reads file data into a buffer. */
 	private FileReader fileReader = null;
@@ -41,8 +39,6 @@ public class FileIO {
 		try {
 			fileWriter = new FileWriter(new File(OUTPUT_FILE));
 			bufferedWriter = new BufferedWriter(fileWriter);
-	
-			initializeReader(INPUT_FILE);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -50,10 +46,19 @@ public class FileIO {
 	}
 	
 	/**
+	 * Returns the current instance of the FileIO object.
+	 * @return The current instance of the FileIO object.
+	 */
+	public static FileIO getInstance() {
+		return instance;
+	}
+	
+	/**
 	 * Initializes a file reader.
 	 * @param path The path of the file to read.
 	 */
-	private void initializeReader(String path) {
+	public void initializeReader(String path) {
+		closeReadFile();
 		try {
 			fileReader = new FileReader(new File(path));
 			buffer = new BufferedReader(fileReader);

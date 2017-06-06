@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import database.Database;
 import miner.storage.Move;
 import miner.storage.Pokemon;
 import util.APIConnection;
@@ -616,6 +617,7 @@ public class PokemonMiner extends Miner {
 	public String convertEventToDatabase() {
 		StringBuilder builder = new StringBuilder();
 		try {
+			FileIO.getInstance().initializeReader(Database.LANG_FILE);
 			BufferedReader buffer = FileIO.getReadBuffer();
 
 			String line;

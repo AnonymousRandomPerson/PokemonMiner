@@ -18,6 +18,7 @@ import javax.swing.ImageIcon;
 
 import miner.Miner;
 import miner.storage.DexNumberContainer;
+import miner.storage.Pokemon;
 import pixelmon.EnumPokemon;
 import util.APIConnection;
 import util.StringUtil;
@@ -78,12 +79,12 @@ public class ImageMiner extends Miner {
 					System.out.println("Image not found for " + dexString + " " + pokemonName + ".");
 					continue;
 				}
-				
+
 				grayFile(icon, newPath, pokemonName);
 			}
 		}
 	}
-	
+
 	/**
 	 * Creates grayscale images of Mega Evolutions that are not in Pixelmon.
 	 */
@@ -104,13 +105,13 @@ public class ImageMiner extends Miner {
 			}
 			int nameIndex = currentIndex + 5;
 			int endIndex = totalRaw.indexOf('|', nameIndex);
-			
+
 			String pokemonName = totalRaw.substring(nameIndex, endIndex);
 			pokemonName.trim();
 			if (EnumPokemon.hasMega(pokemonName)) {
 				continue;
 			}
-			
+
 			String prefix = StringUtil.capitalizeFirst(nameSplit[1]);
 			String suffix = nameSplit.length > 2 ? StringUtil.capitalizeFirst(nameSplit[2]) : "";
 			String newPath = "images/" + prefix + pokemonName + suffix + "Gray.png";
@@ -121,11 +122,31 @@ public class ImageMiner extends Miner {
 				System.out.println("Image not found for " + dexString + " " + pokemonName + ".");
 				continue;
 			}
-			
+
 			grayFile(icon, newPath, pokemonName);
 		}
 	}
-	
+
+	/**
+	 * Gets Shiny minisprite files to dump in order to prevent them from showing up as unused.
+	 * @return Shiny minisprite files to dump.
+	 */
+	public String getShinyDump() {
+		builder = new StringBuilder();
+		for (EnumPokemon pokemon : EnumPokemon.values()) {
+			builder.append("[[File:");
+			builder.append(Pokemon.getTranslatedName(pokemon.name));
+			builder.append("SMS.png|32px]]\n");
+		}
+		String[] otherFiles = { "Grid Bread.png" };
+		for (String otherFile : otherFiles) {
+			builder.append("[[File:");
+			builder.append(otherFile);
+			builder.append("|32px]]\n");
+		}
+		return builder.toString();
+	}
+
 	/**
 	 * Creates a grayscale version of an image.
 	 * @param icon The image to create a grayscale version of.
@@ -139,8 +160,7 @@ public class ImageMiner extends Miner {
 		BufferedImage bi;
 		do {
 			image = GrayFilter.createDisabledImage(originalImage);
-			bi = new BufferedImage(icon.getIconWidth(), icon.getIconHeight(),
-					BufferedImage.TYPE_INT_ARGB);
+			bi = new BufferedImage(icon.getIconWidth(), icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
 			Graphics2D graphics = bi.createGraphics();
 			graphics.drawImage(image, 0, 0, null);
 			graphics.dispose();

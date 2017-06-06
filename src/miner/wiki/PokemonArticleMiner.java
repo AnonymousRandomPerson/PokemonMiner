@@ -4,7 +4,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,6 +15,7 @@ import database.Database;
 import miner.Miner;
 import miner.storage.DexNumberComparator;
 import miner.storage.DexNumberContainer;
+import miner.storage.EggParents;
 import miner.storage.LevelUpEntry;
 import miner.storage.Move;
 import miner.storage.Pokemon;
@@ -30,6 +30,18 @@ import util.StringUtil;
  * Creates articles about Pokémon.
  */
 public class PokemonArticleMiner extends Miner {
+
+	/** ID of the Monster Egg Group. */
+	private static final int EGG_MONSTER = 0;
+	/** ID of the Bug Egg Group. */
+	private static final int EGG_BUG = 1;
+	/** ID of the Field Egg Group. */
+	private static final int EGG_FIELD = 3;
+	/** ID of the Undiscovered Egg Group. */
+	private static final int EGG_UNDISCOVERED = 14;
+
+	/** Keeps track of the current move's chain breed inheritance. */
+	private List<EggParents> currentChainBreed = new ArrayList<>();
 
 	/**
 	 * Creates an article about a Pokémon.
@@ -125,6 +137,7 @@ public class PokemonArticleMiner extends Miner {
 
 				preserveTableEntry("altname");
 				preserveTableEntry("image");
+				preserveTableEntry("shinyimage");
 				preserveTableEntry("sketchfab");
 			}
 
@@ -185,7 +198,9 @@ public class PokemonArticleMiner extends Miner {
 
 			StringBuilder hiddenText = new StringBuilder();
 			String hiddenAbility = result.getString("ABILITYHIDDENNAME");
-			hiddenAbility = StringUtil.translateAbility(hiddenAbility);
+			if (hiddenAbility != null) {
+				hiddenAbility = StringUtil.translateAbility(hiddenAbility);
+			}
 			if (hiddenAbility != null && !hiddenAbility.equals(ability1)) {
 				appendLink(hiddenText, hiddenAbility);
 			} else {
@@ -965,8 +980,8 @@ public class PokemonArticleMiner extends Miner {
 
 			if (egg1.equals("Undiscovered")) {
 				if (pokemon.equals("Nidorina") || pokemon.equals("Nidoqueen")) {
-					egg1ID = 0; // Monster
-					egg2ID = 3; // Field
+					egg1ID = EGG_MONSTER;
+					egg2ID = EGG_FIELD;
 				} else if (!evoIDs.isEmpty()) {
 					query = new StringBuilder();
 					query.append("SELECT EGGGROUP1ID, EGGGROUP2ID FROM PIXELMON WHERE PIXELMONID = ");
@@ -979,6 +994,8 @@ public class PokemonArticleMiner extends Miner {
 						egg2ID = -1;
 					}
 				}
+			} else if (pokemon.equals("Shedinja")) {
+				egg1ID = EGG_BUG;
 			}
 
 			query = new StringBuilder();
@@ -992,131 +1009,156 @@ public class PokemonArticleMiner extends Miner {
 			query.append(" AND b.TMID IS NULL");
 			query.append(" AND b.HMID IS NULL");
 			query.append(" ORDER BY MOVE");
-			result = database.executeQuery(query);
+
 			Set<String> eggMoveSet = new HashSet<>();
 			StringBuilder eggMovesTable = new StringBuilder();
+			try (Statement statement = database.createNewStatement();
+					ResultSet result2 = statement.executeQuery(query.toString())) {
 
-			hasSTAB = false;
-			hasEvoSTAB = false;
-			boolean hasEggMove = false;
+				hasSTAB = false;
+				hasEvoSTAB = false;
+				boolean hasEggMove = false;
 
-			Set<String> availablePokemon = EnumPokemon.getAllPokemon();
+				Set<String> availablePokemon = EnumPokemon.getAllPokemon();
 
-			boolean hasChainMove = false;
-			boolean maleOnly = genderRatio == 100
-					&& !StringUtil.equalsAny(pokemon, "Nidoranmale", "Nidorino", "Nidoking", "Volbeat");
-			while (result.next()) {
-				String moveName = result.getString("MOVE");
-				if (!levelUpMoves.contains(moveName) && !preEvoMoves.contains(moveName)) {
-					if (!hasEggMove) {
-						eggMovesTable.append("\n===By [[breeding]]===\n{{learnlist/breedh|");
-						eggMovesTable.append(type1);
-						if (type2 != null) {
-							eggMovesTable.append('|');
-							eggMovesTable.append(type2);
+				boolean hasChainMove = false;
+				boolean maleOnly = genderRatio == 100
+						&& !StringUtil.equalsAny(pokemon, "Nidoranmale", "Nidorino", "Nidoking", "Volbeat");
+				while (result2.next()) {
+					String moveName = result2.getString("MOVE");
+					if (!levelUpMoves.contains(moveName) && !preEvoMoves.contains(moveName)) {
+						if (!hasEggMove) {
+							eggMovesTable.append("\n===By [[breeding]]===\n{{learnlist/breedh|");
+							eggMovesTable.append(type1);
+							if (type2 != null) {
+								eggMovesTable.append('|');
+								eggMovesTable.append(type2);
+							}
+							eggMovesTable.append("}}");
+							hasEggMove = true;
 						}
-						eggMovesTable.append("}}");
-						hasEggMove = true;
-					}
-					eggMovesTable.append("\n{{learnlist/breed5|");
-					Statement eggStatement = null;
-					ResultSet eggResult = null;
-					boolean chainMove = false;
-					try {
-						eggStatement = database.createNewStatement();
-						query = new StringBuilder();
-						query.append(
-								"SELECT DISTINCT c.PIXELMONID, c.PIXELMONNAME, c.NATIONALPOKEDEXNUMBER, c.FORM FROM (SELECT a.PIXELMONID FROM PIXELMON a ");
-						query.append("WHERE (a.EGGGROUP1ID = ");
-						query.append(egg1ID);
-						query.append(" OR a.EGGGROUP2ID = ");
-						query.append(egg1ID);
-						if (egg2ID > -1) {
-							query.append(" OR a.EGGGROUP1ID = ");
-							query.append(egg2ID);
+						StringBuilder eggRow = new StringBuilder();
+						eggRow.append("\n{{learnlist/breed5|");
+						Statement eggStatement = null;
+						ResultSet eggResult = null;
+						boolean chainMove = false;
+						try {
+							eggStatement = database.createNewStatement();
+							query = new StringBuilder();
+							query.append(
+									"SELECT DISTINCT c.PIXELMONID, c.PIXELMONNAME, c.NATIONALPOKEDEXNUMBER, c.FORM FROM (SELECT a.PIXELMONID FROM PIXELMON a ");
+							query.append("WHERE (a.EGGGROUP1ID = ");
+							query.append(egg1ID);
 							query.append(" OR a.EGGGROUP2ID = ");
-							query.append(egg2ID);
-						}
-						query.append(") AND a.MALEPERCENT > 0) b ");
-						query.append("JOIN PIXELMON c ON b.PIXELMONID = c.PIXELMONID ");
-						query.append("INNER JOIN (SELECT PIXELMONID FROM PIXELMONLEVELSKILLS WHERE MOVEID = ");
-						query.append(result.getInt("MOVEID"));
-						query.append(") d ON c.PIXELMONID = d.PIXELMONID ");
-						query.append("ORDER BY c.NATIONALPOKEDEXNUMBER");
-						eggResult = database.executeQuery(query, eggStatement);
-						boolean hasPokemon = false;
-						while (eggResult.next()) {
-							String parentName = eggResult.getString("PIXELMONNAME");
-							if (availablePokemon.contains(parentName)) {
-								parentName = StringUtil.getFormName(parentName, eggResult.getInt("FORM"));
-								if (!parentName.isEmpty()) {
-									if (maleOnly
-											&& !getEvolutions(databaseID).contains(eggResult.getInt("PIXELMONID"))) {
-										continue;
+							query.append(egg1ID);
+							if (egg2ID > -1) {
+								query.append(" OR a.EGGGROUP1ID = ");
+								query.append(egg2ID);
+								query.append(" OR a.EGGGROUP2ID = ");
+								query.append(egg2ID);
+							}
+							query.append(") AND a.MALEPERCENT > 0) b ");
+							query.append("JOIN PIXELMON c ON b.PIXELMONID = c.PIXELMONID ");
+							query.append("INNER JOIN (SELECT PIXELMONID FROM PIXELMONLEVELSKILLS WHERE MOVEID = ");
+							query.append(result2.getInt("MOVEID"));
+							query.append(") d ON c.PIXELMONID = d.PIXELMONID ");
+							query.append("ORDER BY c.NATIONALPOKEDEXNUMBER");
+							eggResult = database.executeQuery(query, eggStatement);
+							boolean hasPokemon = false;
+							while (eggResult.next()) {
+								String parentName = eggResult.getString("PIXELMONNAME");
+								if (availablePokemon.contains(parentName)) {
+									parentName = StringUtil.getFormName(parentName, eggResult.getInt("FORM"));
+									if (!parentName.isEmpty()) {
+										if (maleOnly && !getEvolutions(databaseID)
+												.contains(eggResult.getInt("PIXELMONID"))) {
+											continue;
+										}
+										hasPokemon = true;
+										eggRow.append("{{p|");
+										eggRow.append(Pokemon.getTranslatedName(eggResult.getString("PIXELMONNAME")));
+										eggRow.append("|1}}");
 									}
-									hasPokemon = true;
-									eggMovesTable.append("{{p|");
-									eggMovesTable
-											.append(Pokemon.getTranslatedName(eggResult.getString("PIXELMONNAME")));
-									eggMovesTable.append("|1}}");
 								}
 							}
+							if (!hasPokemon) {
+								StringBuilder save = builder;
+								getMoveArticle(moveName);
+								builder = save;
+								boolean hasParents = true;
+								for (EggParents egg : currentChainBreed) {
+									if (egg.containsPokemon(pokemon)) {
+										if (egg.parents.isEmpty()) {
+											System.out.println(pokemon + " has no parents for " + moveName + ".");
+											hasParents = false;
+											break;
+										}
+										for (Pokemon parent : egg.parents) {
+											eggRow.append("{{p|");
+											eggRow.append(parent.getTranslatedName());
+											eggRow.append("|1}}");
+										}
+										chainMove = egg.chainBreed;
+										hasChainMove = hasChainMove || chainMove;
+										break;
+									}
+								}
+								if (!hasParents) {
+									continue;
+								}
+							}
+						} catch (SQLException e) {
+							e.printStackTrace();
+						} finally {
+							database.closeStatement(eggStatement, eggResult);
 						}
-						if (!hasPokemon) {
-							System.out.println(pokemon + " has no parents for " + moveName + ".");
-							chainMove = true;
-							hasChainMove = true;
+						eggMovesTable.append(eggRow);
+						eggMovesTable.append('|');
+						eggMovesTable.append(Move.translate(moveName));
+						eggMovesTable.append('|');
+						String moveType = result2.getString("TYPE");
+						eggMovesTable.append(moveType);
+						eggMovesTable.append('|');
+						String category = result2.getString("CATEGORY");
+						eggMovesTable.append(category);
+						eggMovesTable.append('|');
+						int power = result2.getInt("POWER");
+						eggMovesTable.append(power == 0 ? "&mdash;" : power);
+						eggMovesTable.append('|');
+						int accuracy = result2.getInt("ACCURACY");
+						eggMovesTable.append(accuracy == 0 ? "&mdash;" : accuracy);
+						eggMovesTable.append('|');
+						eggMovesTable.append(result2.getInt("PP"));
+						if (!category.equals("Status") && !fixedMoves.contains(moveName)) {
+							if (moveType.equals(type1) || moveType.equals(type2)) {
+								eggMovesTable.append("|'''");
+								hasSTAB = true;
+							} else if (evoTypes.contains(moveType)) {
+								eggMovesTable.append("|''");
+								hasEvoSTAB = true;
+							}
 						}
-					} catch (SQLException e) {
-						e.printStackTrace();
-					} finally {
-						database.closeStatement(eggStatement, eggResult);
+						if (chainMove) {
+							eggMovesTable.append("|9=*");
+						}
+						eggMovesTable.append("}}");
+						eggMoveSet.add(moveName);
 					}
-					eggMovesTable.append('|');
-					eggMovesTable.append(Move.translate(moveName));
-					eggMovesTable.append('|');
-					String moveType = result.getString("TYPE");
-					eggMovesTable.append(moveType);
-					eggMovesTable.append('|');
-					String category = result.getString("CATEGORY");
-					eggMovesTable.append(category);
-					eggMovesTable.append('|');
-					int power = result.getInt("POWER");
-					eggMovesTable.append(power == 0 ? "&mdash;" : power);
-					eggMovesTable.append('|');
-					int accuracy = result.getInt("ACCURACY");
-					eggMovesTable.append(accuracy == 0 ? "&mdash;" : accuracy);
-					eggMovesTable.append('|');
-					eggMovesTable.append(result.getInt("PP"));
-					if (!category.equals("Status") && !fixedMoves.contains(moveName)) {
-						if (moveType.equals(type1) || moveType.equals(type2)) {
-							eggMovesTable.append("|'''");
-							hasSTAB = true;
-						} else if (evoTypes.contains(moveType)) {
-							eggMovesTable.append("|''");
-							hasEvoSTAB = true;
-						}
+				}
+				if (hasEggMove) {
+					eggMovesTable.append("\n{{learnlist/breedf|");
+					eggMovesTable.append(tableDetails);
+					if (hasEvoSTAB) {
+						eggMovesTable.append("|4=1");
 					}
-					if (chainMove) {
-						eggMovesTable.append("|9=*");
+					if (!hasSTAB) {
+						eggMovesTable.append("|5=1");
+					}
+					if (hasChainMove) {
+						eggMovesTable.append("|6=1");
 					}
 					eggMovesTable.append("}}");
-					eggMoveSet.add(moveName);
 				}
-			}
-			if (hasEggMove) {
-				eggMovesTable.append("\n{{learnlist/breedf|");
-				eggMovesTable.append(tableDetails);
-				if (hasEvoSTAB) {
-					eggMovesTable.append("|4=1");
-				}
-				if (!hasSTAB) {
-					eggMovesTable.append("|5=1");
-				}
-				if (hasChainMove) {
-					eggMovesTable.append("|6=1");
-				}
-				eggMovesTable.append("}}");
 			}
 
 			query = new StringBuilder(
@@ -1185,13 +1227,15 @@ public class PokemonArticleMiner extends Miner {
 			builder.append(eggMovesTable);
 			builder.append('\n');
 
-			builder.append("{{Env|");
-			builder.append(type1);
-			if (type2 != null) {
-				builder.append('|');
-				builder.append(type2);
+			if (!egg1.equals("Undiscovered")) {
+				builder.append("{{Env|");
+				builder.append(type1);
+				if (type2 != null) {
+					builder.append('|');
+					builder.append(type2);
+				}
+				builder.append("}}\n");
 			}
-			builder.append("}}\n");
 
 			builder.append(pastModels);
 		} catch (SQLException e) {
@@ -1210,6 +1254,8 @@ public class PokemonArticleMiner extends Miner {
 		if (move.isEmpty()) {
 			move = "Zen Headbutt";
 		}
+
+		currentChainBreed.clear();
 
 		builder = new StringBuilder();
 		builder.append("{{MoveInfobox");
@@ -1469,7 +1515,6 @@ public class PokemonArticleMiner extends Miner {
 
 			StringBuilder eggBuilder = new StringBuilder();
 			if (tmNum == 0 && hmNum == 0) {
-				boolean hasEggMove = false;
 				query = new StringBuilder();
 				query.append("SELECT DISTINCT b.PIXELMONID, b.NATIONALPOKEDEXNUMBER, b.FORM FROM PIXELMONEGGSKILLS a ");
 				query.append("JOIN PIXELMON b ON a.PIXELMONID = b.PIXELMONID ");
@@ -1493,6 +1538,14 @@ public class PokemonArticleMiner extends Miner {
 						result.next();
 						String pokemonName = result.getString("PIXELMONNAME");
 						if (availablePokemon.contains(pokemonName)) {
+							if (pokemonName.equals("Hitmonlee")) {
+								result = database.executeQuery("SELECT PIXELMONID FROM PIXELMON WHERE PIXELMONNAME = 'Tyrogue'");
+								result.next();
+								pokemonName = "Tyrogue";
+								pokemonID = result.getInt("PIXELMONID");
+							} else if (StringUtil.equalsAny("Hitmonchan", "Hitmontop")) {
+								continue;
+							}
 							List<Integer> familyIDs = new ArrayList<>();
 							familyIDs.add(pokemonID);
 							familyIDs.addAll(getEvolutions(pokemonID));
@@ -1528,6 +1581,10 @@ public class PokemonArticleMiner extends Miner {
 						}
 					}
 				}
+				List<EggParents> eggParents = new ArrayList<>();
+				List<EggParents> chainBreedParents = new ArrayList<>();
+				Map<Integer, List<Pokemon>> eggGroupMap = new HashMap<>();
+				boolean hasEggMove = false;
 				for (List<Pokemon> family : eggFamilies) {
 					if (family.get(0).name.equals("Eevee")) {
 						family.sort(new DexNumberComparator());
@@ -1535,6 +1592,7 @@ public class PokemonArticleMiner extends Miner {
 					Set<Integer> canLearnMove = new HashSet<>();
 					List<String> childNames = new ArrayList<String>();
 					List<Integer> familyIDs = new ArrayList<Integer>();
+
 					for (Pokemon pokemon : family) {
 						familyIDs.add(pokemon.listIndex);
 						query = new StringBuilder();
@@ -1559,16 +1617,9 @@ public class PokemonArticleMiner extends Miner {
 								continue;
 							}
 						}
-						if (!hasEggMove) {
-							hasEggMove = true;
-							eggBuilder.append("\n===By [[breeding]]===\n{{eggH}}");
-						}
 						String formName = StringUtil.getFormName(pokemon.name, pokemon.form);
 						learnIDs.add(pokemon.listIndex);
 						if (!formName.isEmpty()) {
-							if (childNames.isEmpty()) {
-								eggBuilder.append("\n{{egg|");
-							}
 							childNames.add(formName);
 						}
 					}
@@ -1577,11 +1628,8 @@ public class PokemonArticleMiner extends Miner {
 					}
 					Pokemon checkPokemon = null;
 					for (Pokemon pokemon : family) {
-						// Undiscovered.
-						if (pokemon.eggGroup1ID != 14) {
+						if (pokemon.eggGroup1ID != EGG_UNDISCOVERED) {
 							checkPokemon = pokemon;
-						}
-						if (StringUtil.equalsAny(pokemon.name, "Nincada")) {
 							break;
 						}
 					}
@@ -1605,46 +1653,141 @@ public class PokemonArticleMiner extends Miner {
 					query.append(") d ON c.PIXELMONID = d.PIXELMONID ");
 					query.append("ORDER BY c.NATIONALPOKEDEXNUMBER");
 					result = database.executeQuery(query);
-					List<String> parentNames = new ArrayList<>();
+					List<Pokemon> parents = new ArrayList<>();
 					while (result.next()) {
 						String parentName = result.getString("PIXELMONNAME");
 						if (availablePokemon.contains(parentName)) {
 							if (checkPokemon.genderRatio == 100 && !familyIDs.contains(result.getInt("PIXELMONID"))
-									&& !StringUtil.equalsAny(checkPokemon.name, "Nidoking", "Volbeat", "Gallade")) {
+									&& !StringUtil.equalsAny(checkPokemon.name, "Nidoranmale", "Volbeat", "Gallade")) {
 								continue;
 							}
 							parentName = StringUtil.getFormName(parentName, result.getInt("FORM"));
 							if (!parentName.isEmpty()) {
-								parentNames.add(parentName);
+								Pokemon p = new Pokemon(parentName);
+								p.nationalPokedexNumber = result.getInt("NATIONALPOKEDEXNUMBER");
+								parents.add(p);
 							}
 						}
 					}
-					boolean first = true;
-					boolean hasParents = !parentNames.isEmpty();
-					for (String child : childNames) {
-						if (!first) {
-							eggBuilder.append("{{-}}");
+					if (!parents.isEmpty()) {
+						for (int eggGroup : new int[] { checkPokemon.eggGroup1ID, checkPokemon.eggGroup2ID }) {
+							if (eggGroup > -1) {
+								List<Pokemon> eggList;
+								if (eggGroupMap.containsKey(eggGroup)) {
+									eggList = eggGroupMap.get(eggGroup);
+								} else {
+									eggList = new ArrayList<>();
+									eggGroupMap.put(eggGroup, eggList);
+								}
+								eggList.add(checkPokemon);
+							}
 						}
-						eggBuilder.append("{{p|");
-						eggBuilder.append(child);
-						eggBuilder.append("}}");
-						if (!hasParents) {
-							eggBuilder.append("{{tt|*|Chain breed}}");
-						}
-						first = false;
 					}
-					eggBuilder.append('|');
-					for (String parent : parentNames) {
-						eggBuilder.append("{{p|");
-						eggBuilder.append(parent);
-						eggBuilder.append("|1}}");
+					EggParents egg = new EggParents(family, childNames, parents, checkPokemon);
+					eggParents.add(egg);
+					if (parents.isEmpty()) {
+						chainBreedParents.add(egg);
+						currentChainBreed.add(egg);
+						egg.chainBreed = true;
+					} else {
+						hasEggMove = true;
 					}
-					if (!hasParents) {
-						System.out.println("No parents for " + checkPokemon.name);
-					}
-					eggBuilder.append("}}");
 				}
+				boolean hasSmeargle = false;
+				do {
+					if (hasEggMove && !chainBreedParents.isEmpty()) {
+						List<EggParents> finished = new ArrayList<>();
+						do {
+							finished.clear();
+							for (EggParents egg : chainBreedParents) {
+								// Look for chain breeding.
+								boolean changed = false;
+								for (int eggGroup : egg.eggGroupIDs) {
+									if (eggGroupMap.containsKey(eggGroup)) {
+										for (Pokemon p : eggGroupMap.get(eggGroup)) {
+											if (p.genderRatio == 0) {
+												continue;
+											}
+											egg.parents.add(p);
+										}
+										changed = true;
+									}
+								}
+								if (changed) {
+									finished.add(egg);
+								}
+							}
+							for (EggParents egg : finished) {
+								for (int eggGroup : egg.eggGroupIDs) {
+									List<Pokemon> eggList;
+									if (eggGroupMap.containsKey(eggGroup)) {
+										eggList = eggGroupMap.get(eggGroup);
+									} else {
+										eggList = new ArrayList<>();
+										eggGroupMap.put(eggGroup, eggList);
+									}
+									eggList.add(egg.checkPokemon);
+								}
+								Collections.sort(egg.parents, new DexNumberComparator());
+							}
+							chainBreedParents.removeAll(finished);
+						} while (!finished.isEmpty());
+					}
+					hasSmeargle = false;
+					if (!StringUtil.getUnavailableMoves().contains(move)) {
+						List<EggParents> finished = new ArrayList<>();
+						for (EggParents egg : chainBreedParents) {
+							if (egg.eggGroupIDs.contains(EGG_FIELD)) {
+								egg.parents.add(new Pokemon("Smeargle"));
+								egg.chainBreed = false;
+								hasEggMove = true;
+								hasSmeargle = true;
+								for (int eggGroup : egg.eggGroupIDs) {
+									List<Pokemon> eggList;
+									if (eggGroupMap.containsKey(eggGroup)) {
+										eggList = eggGroupMap.get(eggGroup);
+									} else {
+										eggList = new ArrayList<>();
+										eggGroupMap.put(eggGroup, eggList);
+									}
+									eggList.add(egg.checkPokemon);
+								}
+								finished.add(egg);
+							}
+						}
+						chainBreedParents.removeAll(finished);
+					}
+				} while (hasSmeargle);
 				if (hasEggMove) {
+					eggBuilder.append("\n===By [[breeding]]===\n{{eggH}}");
+					for (EggParents egg : eggParents) {
+						if (egg.chainBreed && egg.parents.isEmpty()) {
+							System.out.println("No parents for " + egg.checkPokemon.name);
+							continue;
+						}
+						eggBuilder.append("\n{{egg|");
+
+						boolean first = true;
+						for (String child : egg.childNames) {
+							if (!first) {
+								eggBuilder.append("{{-}}");
+							}
+							eggBuilder.append("{{p|");
+							eggBuilder.append(child);
+							eggBuilder.append("}}");
+							if (egg.chainBreed) {
+								eggBuilder.append("{{tt|*|Chain breed}}");
+							}
+							first = false;
+						}
+						eggBuilder.append('|');
+						for (Pokemon parent : egg.parents) {
+							eggBuilder.append("{{p|");
+							eggBuilder.append(parent.getTranslatedName());
+							eggBuilder.append("|1}}");
+						}
+						eggBuilder.append("}}");
+					}
 					eggBuilder.append("\n{{eggF}}");
 				}
 			}
@@ -1680,6 +1823,7 @@ public class PokemonArticleMiner extends Miner {
 				query.append("WHERE MOVEID = ");
 				query.append(moveID);
 				query.append(" ORDER BY b.NATIONALPOKEDEXNUMBER, b.FORM");
+				result.close();
 				result = database.executeQuery(query);
 				boolean hasMove = false;
 				while (result.next()) {
@@ -1919,29 +2063,26 @@ public class PokemonArticleMiner extends Miner {
 		}
 
 		totalRaw = APIConnection.getArticleSourcePixelmon(articleName);
-		int indexTOC = builder.indexOf("__NOTOC__\n");
-		if (indexTOC == -1) {
-			indexTOC = 0;
-		}
-		indexTOC += 10;
 		int headerIndex = totalRaw.indexOf("==");
 		if (headerIndex > -1) {
-			String description = totalRaw.substring(indexTOC, headerIndex);
+			String description = totalRaw.substring(0, headerIndex);
 			builder.append(description);
 			int index17 = builder.indexOf("17");
 			if (index17 == -1) {
 				index17 = builder.indexOf("seventeen");
-				builder.replace(index17, index17 + "seventeen".length(), "18");
+				if (index17 > -1) {
+					builder.replace(index17, index17 + "seventeen".length(), "18");
+				}
 			} else {
 				builder.replace(index17, index17 + 2, "18");
 			}
 		} else {
 			builder.append("The ");
 			builder.append(type);
-			builder.append(" type is one of the 18 Pokémon [[types]].");
+			builder.append(" type is one of the 18 Pokémon [[types]].\n");
 		}
 
-		builder.append("\n==Type effectiveness==\n===Offensive===\n{{Type effectiveness");
+		builder.append("==Type effectiveness==\n===Offensive===\n{{Type effectiveness");
 		EnumType enumType = EnumType.parseType(type);
 		for (EnumType otherType : EnumType.values()) {
 			float effectiveness = EnumType.getEffectiveness(enumType, otherType);
@@ -1976,6 +2117,7 @@ public class PokemonArticleMiner extends Miner {
 		query.append("' ORDER BY a.NATIONALPOKEDEXNUMBER, a.FORM");
 		ResultSet result = database.executeQuery(query);
 		Set<String> availablePokemon = EnumPokemon.getAllPokemon();
+		Set<String> usedPokemon = new HashSet<>();
 		try {
 			while (result.next()) {
 				String pokemon = result.getString("PIXELMONNAME");
@@ -1984,6 +2126,10 @@ public class PokemonArticleMiner extends Miner {
 					if (formName.isEmpty()) {
 						formName = pokemon;
 					}
+					if (usedPokemon.contains(formName)) {
+						continue;
+					}
+					usedPokemon.add(formName);
 					builder.append("\n{{moveentry|");
 					builder.append(formName);
 					builder.append('|');
@@ -2008,16 +2154,7 @@ public class PokemonArticleMiner extends Miner {
 			query.append(type);
 			query.append("' ORDER BY b.NAME");
 			result = database.executeQuery(query);
-			Set<String> unavailable = new HashSet<>();
-			unavailable.addAll(Arrays.asList("Blue Flare", "Bolt Strike", "Dark Void", "Freeze Shock", "Fusion Bolt",
-					"Fusion Flare", "Glaciate", "Head Charge", "Heart Swap", "Horn Leech", "Ice Burn", "Judgment",
-					"Lunar Dance", "Magma Storm", "Relic Song", "Roar of Time", "Sacred Sword", "Searing Shot",
-					"Secret Sword", "Seed Flare", "Shadow Force", "Simple Beam", "Spacial Rend", "Tail Glow",
-					"Tail Slap", "Techno Blast", "Aromatic Mist", "Crafty Shield", "Electrify", "Fairy Lock",
-					"Flower Shield", "Flying Press", "Forest's Curse", "Geomancy", "King's Shield", "Land's Wrath",
-					"Noble Roar", "Oblivion Wing", "Parabolic Charge", "Parting Shot", "Powder", "Topsy-Turvy",
-					"Trick-or-Treat", "Diamond Storm", "Hyperspace Hole", "Hyperspace Fury", "Steam Eruption",
-					"Thousand Arrows", "Thousand Waves", "Light of Ruin"));
+			Set<String> unavailable = StringUtil.getUnavailableMoves();
 			while (result.next()) {
 				String moveName = result.getString("MOVE");
 				moveName = Move.translate(moveName);
@@ -2188,6 +2325,7 @@ public class PokemonArticleMiner extends Miner {
 		}
 
 		builder.append("\n{{egggroupf}}");
+		builder.append("\n[[Category:Egg Groups]]");
 
 		return builder.toString();
 	}
@@ -2244,7 +2382,7 @@ public class PokemonArticleMiner extends Miner {
 		}
 		stringBuilder.append("]]");
 	}
-	
+
 	/**
 	 * Keeps a table entry that was in the original article.
 	 * @param key The key of the table entry.
@@ -2257,24 +2395,6 @@ public class PokemonArticleMiner extends Miner {
 		if (entry != null) {
 			appendTableField(key, entry.trim());
 		}
-	}
-
-	/**
-	 * Keeps a section of wikicode that was in the original article.
-	 * @param sectionName The name of the section.
-	 */
-	private boolean preserveSection(String sectionName) {
-		int startIndex = totalRaw.indexOf(sectionName);
-		if (startIndex >= 0) {
-			int endIndex = totalRaw.indexOf("==", startIndex + sectionName.length());
-			if (endIndex == -1) {
-				endIndex = totalRaw.length();
-			}
-			builder.append('\n');
-			builder.append(totalRaw.substring(startIndex, endIndex).trim());
-			return true;
-		}
-		return false;
 	}
 
 	/**

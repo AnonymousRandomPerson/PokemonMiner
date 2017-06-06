@@ -21,6 +21,8 @@ public class DropEntry {
 	public boolean isRare;
 	/** The percentage chance of the item drop occurring. */
 	public float percent;
+	/** Whether the entry is a special entry that should be marked. */
+	public boolean special;
 	
 	/**
 	 * Initializes a drop entry.
@@ -50,6 +52,9 @@ public class DropEntry {
 			range = Integer.toString(newMin);
 		} else {
 			range = newMin + "-" + max;
+		}
+		if (this.special) {
+			range += " (Special)";
 		}
 		return range;
 	}

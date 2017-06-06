@@ -39,6 +39,8 @@ public class APIConnection {
 			URL url = new URL(urlToRead);
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			conn.setRequestMethod("GET");
+			conn.setRequestProperty("User-Agent",
+					"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
 			BufferedReader rd = null;
 			try {
 				rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -75,7 +77,7 @@ public class APIConnection {
 	private static JSONObject getJSONFromURL(String urlToRead) {
 		return new JSONObject(getURL(urlToRead));
 	}
-	
+
 	/**
 	 * Gets the source for a wiki article.
 	 * @param url The base URL of the wiki API.

@@ -97,7 +97,7 @@ public class ListMiner extends Miner {
 		builder.append("\n==Generation 7==\n");
 		builder.append("*0/81 Pokémon ({{percent|0|81}})\n");
 		builder.append("*No Pokémon from Generation 7 will be added until Generation 8 is released.");
-		
+
 		builder.append("\n==Mega Evolutions==\n");
 		String folder = "megas";
 		File megaFolder = new File(folder);
@@ -110,17 +110,17 @@ public class ListMiner extends Miner {
 			String[] nameSplit = fileName.replace(".png", "").split("-");
 			int dexNumber = Integer.parseInt(nameSplit[0]);
 			String dexString = StringUtil.convertDexNumberString(dexNumber);
-			
+
 			currentIndex = totalRaw.indexOf("|" + dexString + "|");
 			if (dexNumber <= 151) {
 				currentIndex = totalRaw.indexOf("|" + dexString + "|", currentIndex + 1);
 			}
 			int nameIndex = currentIndex + 5;
 			int endIndex = totalRaw.indexOf('|', nameIndex);
-			
+
 			String pokemonName = totalRaw.substring(nameIndex, endIndex);
 			pokemonName.trim();
-			
+
 			String prefix = StringUtil.capitalizeFirst(nameSplit[1]);
 			String suffix = nameSplit.length > 2 ? StringUtil.capitalizeFirst(nameSplit[2]) : "";
 			boolean hasMega = EnumPokemon.hasMega(pokemonName);
@@ -170,8 +170,15 @@ public class ListMiner extends Miner {
 	public String getAvailablePokemon() {
 		builder = new StringBuilder();
 
-		builder.append("=<div style=\"border-bottom:1px solid #000;\">{{PAGENAME}}</div>=\n");
-		builder.append("This is a list of all currently available Pokémon in [[Pixelmon]].\n");
+		builder.append("<languages/>\n");
+		builder.append("<translate>\n");
+		builder.append("<!--T:1-->\n");
+		builder.append("This is a list of all ");
+		builder.append(EnumPokemon.values().length);
+		builder.append(" Pokémon currently available in [[Pixelmon]].\n");
+		builder.append("\n<!--T:2-->\n");
+		builder.append(
+				"The progress of available Pokémon compared to all existing Pokémon in the ''Pokémon'' games can be found [[Available Pokémon/Progress|here]].\n");
 		builder.append("<div class=\"row\">");
 
 		String[] ordinals = { "First", "Second", "Third", "Fourth", "Fifth", "Sixth" };
@@ -193,7 +200,7 @@ public class ListMiner extends Miner {
 				if (currentNumber <= generationEnd[i + 1]) {
 					builder.append('\n');
 					if (!first) {
-						builder.append("<br>");
+						builder.append("<br />");
 					}
 					builder.append("'''#");
 					builder.append(StringUtil.convertDexNumberString(currentNumber));
@@ -210,12 +217,7 @@ public class ListMiner extends Miner {
 		}
 
 		builder.append("\n</div>\n");
-		builder.append("==Progress==\n");
-		builder.append(
-				"The progress of available Pokémon compared to all existing Pokémon can be found [[Available Pokémon/Progress|here]].\n");
-		builder.append("==See also==\n");
-		builder.append(
-				"Do you want to contribute your own model to the mod? Drop by the [http://pixelmonmod.com/viewforum.php?f=94 modelling] forum.");
+		builder.append("</translate>");
 
 		return builder.toString();
 	}
@@ -227,7 +229,6 @@ public class ListMiner extends Miner {
 	public String getShinyPictures() {
 		builder = new StringBuilder();
 
-		builder.append("=<div style=\"border-bottom:1px solid #000;\">{{PAGENAME}}</div>=\n");
 		builder.append("This is a list of pictures of each [[available Pokémon]]'s [[Shiny]] form.\n");
 		builder.append("__TOC__");
 
@@ -248,6 +249,7 @@ public class ListMiner extends Miner {
 				if (currentNumber <= generationEnd[i]) {
 					String translatedName = pokemon.getTranslatedName();
 					StringUtil.currentRaw = APIConnection.getArticleSourcePixelmon(translatedName);
+					totalRaw = StringUtil.currentRaw;
 					String imageName = StringUtil.getTableEntry("shinyimage");
 					if (imageName == null) {
 						imageName = translatedName + "S.png";
@@ -265,6 +267,8 @@ public class ListMiner extends Miner {
 
 			builder.append("\n</gallery>");
 		}
+		
+		preserveSection("[[Mega Evolutions]]");
 
 		return builder.toString();
 	}
@@ -294,12 +298,17 @@ public class ListMiner extends Miner {
 		ResultSet result = database.executeQuery(query);
 		String[] evs = { "HP", "ATK", "DEF", "SPATK", "SPDEF", "SPD" };
 		try {
+			Set<String> usedNames = new HashSet<>();
 			while (result.next()) {
 				int dexNumber = result.getInt("NATIONALPOKEDEXNUMBER");
 				if (dexContainer.hasDexNumber(dexNumber)) {
 					String translatedName = StringUtil.getFormName(result.getString("PIXELMONNAME"),
 							result.getInt("FORM"));
 					if (!translatedName.isEmpty()) {
+						if (usedNames.contains(translatedName)) {
+							continue;
+						}
+						usedNames.add(translatedName);
 						builder.append("\n{{EVList|");
 						builder.append(translatedName);
 						for (String ev : evs) {

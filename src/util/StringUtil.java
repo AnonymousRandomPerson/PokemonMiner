@@ -25,13 +25,13 @@ public class StringUtil {
 
 	/** An array of all existing Generations. */
 	public static final String[] ALL_GENERATIONS = { "I", "II", "III", "IV", "V", "VI" };
-	
+
 	/** All moves that no available Pokémon can learn. */
 	private static Set<String> unavailableMoves;
-	
+
 	/** Map from item IDs to abnormal item names. */
 	private static Map<String, String> itemNameMap;
-	
+
 	/** Corrects the names of certain Pokémon that are spelled incorrectly due to restrictions. */
 	private static Map<String, String> pokemonCorrectMap;
 
@@ -126,6 +126,13 @@ public class StringUtil {
 		if (startIndex == -1) {
 			return null;
 		}
+		char beforeChar = currentRaw.charAt(startIndex - 1);
+		while (Character.isAlphabetic(beforeChar)) {
+			startIndex = currentRaw.indexOf(section, startIndex + 1);
+			if (startIndex == -1) {
+				return null;
+			}
+		}
 		startIndex += section.length() + 1;
 		int endIndex = currentRaw.indexOf("|", startIndex);
 		int newLineIndex = currentRaw.indexOf("\n", startIndex);
@@ -150,9 +157,9 @@ public class StringUtil {
 		}
 		return entry;
 	}
-	
+
 	/**
-	 * Gets an entry in a Pokémon table, with backup entries for nonexistence. 
+	 * Gets an entry in a Pokémon table, with backup entries for nonexistence.
 	 * @param section The section to get an entry from.
 	 * @return The entry in the Pokémon table, or null if the entry doesn't exist.
 	 */
@@ -472,10 +479,21 @@ public class StringUtil {
 			case 3:
 				return "Deoxys-Speed";
 			}
+		} else if (form > 0) {
+			if (equalsAny(pokemon, "Venusaur", "Blastoise")) {
+				return "Mega " + pokemon;
+			} else if (pokemon.equals("Charizard")) {
+				switch (form) {
+				case 1:
+					return "Mega Charizard X";
+				case 2:
+					return "Mega Charizard Y";
+				}
+			}
 		}
 		return Pokemon.getTranslatedName(pokemon);
 	}
-	
+
 	/**
 	 * Gets all moves that no Pokémon can learn.
 	 * @return A set of all moves that no Pokémon can learn.
@@ -483,15 +501,15 @@ public class StringUtil {
 	public static Set<String> getUnavailableMoves() {
 		if (unavailableMoves == null) {
 			unavailableMoves = new HashSet<>();
-			unavailableMoves.addAll(
-				Arrays.asList("Blue Flare", "Bolt Strike", "Dark Void", "Freeze Shock", "Fusion Bolt", "Fusion Flare",
-						"Glaciate", "Head Charge", "Heart Swap", "Horn Leech", "Ice Burn", "Judgment", "Lunar Dance",
-						"Magma Storm", "Relic Song", "Roar of Time", "Sacred Sword", "Searing Shot", "Secret Sword",
-						"Seed Flare", "Shadow Force", "Simple Beam", "Spacial Rend", "Tail Slap", "Techno Blast",
-						"Aromatic Mist", "Crafty Shield", "Electrify", "Fairy Lock", "Flying Press", "Forest's Curse",
-						"Geomancy", "King's Shield", "Land's Wrath", "Noble Roar", "Oblivion Wing", "Parabolic Charge",
-						"Parting Shot", "Powder", "Topsy-Turvy", "Trick-or-Treat", "Diamond Storm", "Hyperspace Hole",
-						"Hyperspace Fury", "Steam Eruption", "Thousand Arrows", "Thousand Waves", "Light of Ruin"));
+			unavailableMoves.addAll(Arrays.asList("Blue Flare", "Bolt Strike", "Dark Void", "Freeze Shock",
+					"Fusion Bolt", "Fusion Flare", "Glaciate", "Head Charge", "Heart Swap", "Horn Leech", "Ice Burn",
+					"Judgment", "Lunar Dance", "Relic Song", "Roar of Time", "Sacred Sword",
+					"Searing Shot", "Secret Sword", "Seed Flare", "Shadow Force", "Simple Beam", "Spacial Rend",
+					"Tail Slap", "Techno Blast", "Aromatic Mist", "Crafty Shield", "Electrify", "Fairy Lock",
+					"Flying Press", "Forest's Curse", "Geomancy", "King's Shield", "Land's Wrath", "Noble Roar",
+					"Oblivion Wing", "Parabolic Charge", "Parting Shot", "Powder", "Topsy-Turvy", "Trick-or-Treat",
+					"Diamond Storm", "Hyperspace Hole", "Hyperspace Fury", "Steam Eruption", "Thousand Arrows",
+					"Thousand Waves", "Light of Ruin"));
 		}
 		return unavailableMoves;
 	}
@@ -505,7 +523,7 @@ public class StringUtil {
 		ability = ability.replace(" ", "");
 		return Database.getDatabase().getLangMap().get("ability." + ability + ".name");
 	}
-	
+
 	/**
 	 * Translates a held item ID into English.
 	 * @param heldItem The ID of the held item.
@@ -515,7 +533,7 @@ public class StringUtil {
 		heldItem = heldItem.replace("pixelmon:", "");
 		return Database.getDatabase().getLangMap().get("item." + heldItem + ".name");
 	}
-	
+
 	/**
 	 * Attempts to form a translated item name based on its ID.
 	 * @param itemID The ID of the item.
@@ -541,7 +559,7 @@ public class StringUtil {
 		}
 		return newName;
 	}
-	
+
 	/**
 	 * Capitalizes the first character of a string.
 	 * @param string The string to capitalize.
@@ -557,7 +575,7 @@ public class StringUtil {
 		}
 		return newString;
 	}
-	
+
 	/**
 	 * Gets the item name map. Initializes it if not already initialized.
 	 * @return The item name map.
@@ -656,7 +674,7 @@ public class StringUtil {
 			builder.append(fieldParameter.toString());
 		}
 	}
-	
+
 	/**
 	 * Encloses a list of strings with characters.
 	 * @param strings The strings to enclose.
@@ -689,7 +707,7 @@ public class StringUtil {
 	public static String separateStrings(List<String> strings, String middle) {
 		return encloseStrings(strings, "", middle, "");
 	}
-	
+
 	/**
 	 * Corrects the name of a Pokémon whose name is spelled incorrectly.
 	 * @param name The name of the Pokémon.
@@ -702,7 +720,7 @@ public class StringUtil {
 		}
 		return name;
 	}
-	
+
 	/**
 	 * Gets the Pokémon corrected name map. Loads the map if uninitialized.
 	 * @return The Pokémon corrected name map.
@@ -711,6 +729,7 @@ public class StringUtil {
 		if (pokemonCorrectMap == null) {
 			pokemonCorrectMap = new HashMap<>();
 			pokemonCorrectMap.put("Ho-oh", "Ho-Oh");
+			pokemonCorrectMap.put("MimeJr", "Mime Jr.");
 			pokemonCorrectMap.put("MrMime", "Mr. Mime");
 			pokemonCorrectMap.put("Nidoranfemale", "Nidoran♀");
 			pokemonCorrectMap.put("Nidoranmale", "Nidoran♂");

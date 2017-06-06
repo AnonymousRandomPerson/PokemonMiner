@@ -13,11 +13,29 @@ public abstract class Miner {
 	protected Database database;
 	/** The raw wikicode in the original article. */
 	protected String totalRaw;
-	
+
 	/**
 	 * Loads the Pixelmon database.
 	 */
 	public Miner() {
 		database = Database.getDatabase();
+	}
+
+	/**
+	 * Keeps a section of wikicode that was in the original article.
+	 * @param sectionName The name of the section.
+	 */
+	protected boolean preserveSection(String sectionName) {
+		int startIndex = totalRaw.indexOf(sectionName);
+		if (startIndex >= 0) {
+			int endIndex = totalRaw.indexOf("==", startIndex + sectionName.length());
+			if (endIndex == -1) {
+				endIndex = totalRaw.length();
+			}
+			builder.append('\n');
+			builder.append(totalRaw.substring(startIndex, endIndex).trim());
+			return true;
+		}
+		return false;
 	}
 }
