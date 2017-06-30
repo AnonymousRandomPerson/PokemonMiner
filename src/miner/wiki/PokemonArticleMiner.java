@@ -101,7 +101,7 @@ public class PokemonArticleMiner extends Miner {
 		query.append("LEFT JOIN PIXELMONSPAWNTIMES i ON a.SPAWNTIMEID = i.SPAWNTIMEID ");
 		query.append("WHERE a.PIXELMONNAME = '");
 		query.append(pokemon);
-		query.append("' ");
+		query.append("' AND FORM IS NULL");
 
 		ResultSet result = database.executeQuery(query);
 
@@ -1539,7 +1539,8 @@ public class PokemonArticleMiner extends Miner {
 						String pokemonName = result.getString("PIXELMONNAME");
 						if (availablePokemon.contains(pokemonName)) {
 							if (pokemonName.equals("Hitmonlee")) {
-								result = database.executeQuery("SELECT PIXELMONID FROM PIXELMON WHERE PIXELMONNAME = 'Tyrogue'");
+								result = database
+										.executeQuery("SELECT PIXELMONID FROM PIXELMON WHERE PIXELMONNAME = 'Tyrogue'");
 								result.next();
 								pokemonName = "Tyrogue";
 								pokemonID = result.getInt("PIXELMONID");
