@@ -2123,7 +2123,7 @@ public class PokemonArticleMiner extends Miner {
 			while (result.next()) {
 				String pokemon = result.getString("PIXELMONNAME");
 				if (availablePokemon.contains(pokemon)) {
-					String formName = StringUtil.getFormName(pokemon, result.getInt("FORM"));
+					String formName = StringUtil.getFormNameIncludeCastform(pokemon, result.getInt("FORM"));
 					if (formName.isEmpty()) {
 						formName = pokemon;
 					}
@@ -2183,6 +2183,7 @@ public class PokemonArticleMiner extends Miner {
 		builder.append("\n{{typemovef|");
 		builder.append(type);
 		builder.append("}}");
+		builder.append("\n[[Category:Types]]");
 
 		return builder.toString();
 	}

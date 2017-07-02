@@ -451,6 +451,28 @@ public class StringUtil {
 	}
 
 	/**
+	 * Gets the name of a particular form of a Pokémon. Includes Castform.
+	 * @param pokemon The base Pokémon species name.
+	 * @param form The form index of the Pokémon.
+	 * @return The name of the specified form of the Pokémon.
+	 */
+	public static String getFormNameIncludeCastform(String pokemon, int form) {
+		if (pokemon.equals("Castform")) {
+			switch (form) {
+			case 0:
+				return "Castform";
+			case 1:
+				return "Castform-Snowy";
+			case 2:
+				return "Castform-Rainy";
+			case 3:
+				return "Castform-Sunny";
+			}
+		}
+		return getFormName(pokemon, form);
+	}
+
+	/**
 	 * Gets the name of a particular form of a Pokémon.
 	 * @param pokemon The base Pokémon species name.
 	 * @param form The form index of the Pokémon.
@@ -489,6 +511,8 @@ public class StringUtil {
 				case 2:
 					return "Mega Charizard Y";
 				}
+			} else {
+				return "";
 			}
 		}
 		return Pokemon.getTranslatedName(pokemon);
@@ -503,13 +527,13 @@ public class StringUtil {
 			unavailableMoves = new HashSet<>();
 			unavailableMoves.addAll(Arrays.asList("Blue Flare", "Bolt Strike", "Dark Void", "Freeze Shock",
 					"Fusion Bolt", "Fusion Flare", "Glaciate", "Head Charge", "Heart Swap", "Horn Leech", "Ice Burn",
-					"Judgment", "Lunar Dance", "Relic Song", "Roar of Time", "Sacred Sword",
-					"Searing Shot", "Secret Sword", "Seed Flare", "Shadow Force", "Simple Beam", "Spacial Rend",
-					"Tail Slap", "Techno Blast", "Aromatic Mist", "Crafty Shield", "Electrify", "Fairy Lock",
-					"Flying Press", "Forest's Curse", "Geomancy", "King's Shield", "Land's Wrath", "Noble Roar",
-					"Oblivion Wing", "Parabolic Charge", "Parting Shot", "Powder", "Topsy-Turvy", "Trick-or-Treat",
-					"Diamond Storm", "Hyperspace Hole", "Hyperspace Fury", "Steam Eruption", "Thousand Arrows",
-					"Thousand Waves", "Light of Ruin"));
+					"Judgment", "Lunar Dance", "Relic Song", "Roar of Time", "Sacred Sword", "Searing Shot",
+					"Secret Sword", "Seed Flare", "Shadow Force", "Simple Beam", "Spacial Rend", "Tail Slap",
+					"Techno Blast", "Aromatic Mist", "Crafty Shield", "Electrify", "Fairy Lock", "Flying Press",
+					"Forest's Curse", "Geomancy", "King's Shield", "Land's Wrath", "Noble Roar", "Oblivion Wing",
+					"Parabolic Charge", "Parting Shot", "Powder", "Topsy-Turvy", "Trick-or-Treat", "Diamond Storm",
+					"Hyperspace Hole", "Hyperspace Fury", "Steam Eruption", "Thousand Arrows", "Thousand Waves",
+					"Light of Ruin"));
 		}
 		return unavailableMoves;
 	}

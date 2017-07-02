@@ -267,8 +267,9 @@ public class ListMiner extends Miner {
 
 			builder.append("\n</gallery>");
 		}
+		totalRaw = APIConnection.getArticleSourcePixelmon("Shiny Pokémon/Pictures");
 		
-		preserveSection("[[Mega Evolutions]]");
+		preserveSection("==[[Mega Evolutions]]==");
 
 		return builder.toString();
 	}

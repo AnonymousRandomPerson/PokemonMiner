@@ -18,9 +18,9 @@ import org.json.JSONObject;
 public class APIConnection {
 
 	/** The base URL for querying from Bulbapedia. */
-	private static final String BULBAPEDIA_API = "http://bulbapedia.bulbagarden.net/w/api.php?action=query&format=json";
+	private static final String BULBAPEDIA_API = "https://bulbapedia.bulbagarden.net/w/api.php?action=query&format=json";
 	/** The URL for getting raw source data from Bulbapedia. */
-	private static final String ARTICLE_URL = "http://bulbapedia.bulbagarden.net/w/index.php?action=raw&title=";
+	private static final String ARTICLE_URL = "https://bulbapedia.bulbagarden.net/w/index.php?action=raw&title=";
 	/** The URL for getting raw source data from the Pixelmon wiki. */
 	private static final String PIXELMON_API = "http://pixelmonmod.com/wiki/index.php?action=raw&title=";
 	/** The URL for querying categories on Bulbapedia. */
