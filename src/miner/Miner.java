@@ -26,6 +26,15 @@ public abstract class Miner {
 	 * @param sectionName The name of the section.
 	 */
 	protected boolean preserveSection(String sectionName) {
+		return preserveSection(sectionName, builder);
+	}
+
+	/**
+	 * Keeps a section of wikicode that was in the original article.
+	 * @param sectionName The name of the section.
+	 * @param builder The string builder to add the wikicode to.
+	 */
+	protected boolean preserveSection(String sectionName, StringBuilder builder) {
 		int startIndex = totalRaw.indexOf(sectionName);
 		if (startIndex >= 0) {
 			int endIndex = totalRaw.indexOf("==", startIndex + sectionName.length());

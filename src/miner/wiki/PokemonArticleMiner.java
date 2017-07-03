@@ -142,20 +142,9 @@ public class PokemonArticleMiner extends Miner {
 			}
 
 			StringBuilder pastModels = new StringBuilder();
-			int startIndex = totalRaw.indexOf("==Other forms==");
+			int startIndex = totalRaw.indexOf("==Past models==");
 			if (startIndex >= 0) {
-				int currentIndex = totalRaw.indexOf("<gallery>") + 10;
-				int imageEnd = totalRaw.indexOf("|", currentIndex);
-				String imageName = totalRaw.substring(currentIndex, imageEnd);
-				String defaultShiny = englishName + "S.png";
-				if (!imageName.equals(defaultShiny)) {
-					appendTableField("shinyimage", imageName);
-				}
-				currentIndex = totalRaw.indexOf("=", currentIndex);
-				if (currentIndex > -1) {
-					pastModels.append("\n==Past models==\n");
-					pastModels.append(totalRaw.substring(currentIndex));
-				}
+				pastModels.append(totalRaw.substring(startIndex));
 			}
 			if (pastModels.length() == 0) {
 				pastModels.append("\n[[Category:Pokémon]]");
@@ -1336,7 +1325,7 @@ public class PokemonArticleMiner extends Miner {
 			int hmNum = result.getInt("HMID");
 			int tutorType = result.getInt("TUTORTYPE");
 			if ("Rock Smash".equals(move)) {
-				tm = "TM94/HM06";
+				tm = "[[TM94]]/[[HM06]]\n|nolink=y";
 			} else if (tmNum != 0) {
 				tm = "TM";
 				if (tmNum < 10) {
@@ -1784,7 +1773,7 @@ public class PokemonArticleMiner extends Miner {
 						eggBuilder.append('|');
 						for (Pokemon parent : egg.parents) {
 							eggBuilder.append("{{p|");
-							eggBuilder.append(parent.getTranslatedName());
+							eggBuilder.append(parent);
 							eggBuilder.append("|1}}");
 						}
 						eggBuilder.append("}}");
